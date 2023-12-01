@@ -161,7 +161,7 @@ fn part2_no_regex_bidir_add_directly(input: &str) -> i64 {
 /// Split into lines ourselves, so that str::lines doesn't have to handle utf-8
 /// codepoints, and we can just check for line break bytes instead.
 ///
-/// Benchmark on my computer: around 14us/iter (1,530MB/s)
+/// Benchmark on my computer: around 41us/iter (522MB/s)
 fn part2_no_regex_bidir_add_directly_byte_lines(input: &str) -> i64 {
     let mut result: i64 = 0;
     for line in input.as_bytes().split(|c| *c == b'\n') {
@@ -207,83 +207,39 @@ fn get_digit(at: &[u8]) -> Option<i64> {
 pub fn main() {
     let input = std::fs::read_to_string("./input/day01").unwrap();
     println!("part1: {}", part1(&input));
-    println!("part2 (regex):    {}", part2_regex(&input));
-    println!("part2 (no regex): {}", part2_no_regex(&input));
-    println!("part2 (no regex, bidir): {}", part2_no_regex_bidir(&input));
-    println!(
-        "part2 (no regex, bidir, add directly): {}",
-        part2_no_regex_bidir_add_directly(&input)
-    );
-    println!(
-        "part2 (no regex, bidir, add directly, byte lines): {}",
-        part2_no_regex_bidir_add_directly_byte_lines(&input)
-    );
+    let iters = 10000;
 
-    let begin = std::time::Instant::now();
-    for _ in 0..10000 {
-        part1(&input);
+    let fns: [(&'static str, fn(&str) -> i64); 5] = [
+        ("part2 (regex)", part2_regex),
+        ("part2 (no regex)", part2_no_regex),
+        ("part2 (no regex, bidir)", part2_no_regex_bidir),
+        (
+            "part2 (no regex, bidir, add directly)",
+            part2_no_regex_bidir_add_directly,
+        ),
+        (
+            "part2 (no regex, bidir, add directly, byte lines)",
+            part2_no_regex_bidir_add_directly_byte_lines,
+        ),
+    ];
+    for (name, f) in fns {
+        println!("{name}: {}", f(&input));
     }
-    let end = std::time::Instant::now();
-    println!(
-        "10k part1 in: {}us ({}us/iter)",
-        (end - begin).as_micros(),
-        (end - begin).as_micros() / 10000
-    );
-
-    let begin = std::time::Instant::now();
-    for _ in 0..10000 {
-        part2_regex(&input);
+    println!("");
+    for (name, f) in fns {
+        let begin = std::time::Instant::now();
+        for _ in 0..iters {
+            f(&input);
+        }
+        let end = std::time::Instant::now();
+        println!(
+            "{} {} in: {}us ({}us/iter)",
+            iters,
+            name,
+            (end - begin).as_micros(),
+            (end - begin).as_micros() / iters
+        );
     }
-    let end = std::time::Instant::now();
-    println!(
-        "10k part2 (regex) in: {}us ({}us/iter)",
-        (end - begin).as_micros(),
-        (end - begin).as_micros() / 10000
-    );
-
-    let begin = std::time::Instant::now();
-    for _ in 0..10000 {
-        part2_no_regex(&input);
-    }
-    let end = std::time::Instant::now();
-    println!(
-        "10k part2 (no regex) in: {}us ({}us/iter)",
-        (end - begin).as_micros(),
-        (end - begin).as_micros() / 10000
-    );
-
-    let begin = std::time::Instant::now();
-    for _ in 0..10000 {
-        part2_no_regex_bidir(&input);
-    }
-    let end = std::time::Instant::now();
-    println!(
-        "10k part2 (no regex, bidir) in: {}us ({}us/iter)",
-        (end - begin).as_micros(),
-        (end - begin).as_micros() / 10000
-    );
-
-    let begin = std::time::Instant::now();
-    for _ in 0..10000 {
-        part2_no_regex_bidir_add_directly(&input);
-    }
-    let end = std::time::Instant::now();
-    println!(
-        "10k part2 (no regex, bidir, add directly) in: {}us ({}us/iter)",
-        (end - begin).as_micros(),
-        (end - begin).as_micros() / 10000
-    );
-
-    let begin = std::time::Instant::now();
-    for _ in 0..10000 {
-        part2_no_regex_bidir_add_directly_byte_lines(&input);
-    }
-    let end = std::time::Instant::now();
-    println!(
-        "10k part2 (no regex, bidir, add directly, byte lines) in: {}us ({}us/iter)",
-        (end - begin).as_micros(),
-        (end - begin).as_micros() / 10000
-    );
 }
 
 #[test]
