@@ -92,6 +92,39 @@ pub fn main() {
     println!("part1: {}", part1(&input));
     println!("part2 (regex):    {}", part2_regex(&input));
     println!("part2 (no regex): {}", part2_no_regex(&input));
+
+    let begin = std::time::Instant::now();
+    for _ in 0..10000 {
+        part1(&input);
+    }
+    let end = std::time::Instant::now();
+    println!(
+        "10k part1 in: {}us ({}us/iter)",
+        (end - begin).as_micros(),
+        (end - begin).as_micros() / 10000
+    );
+
+    let begin = std::time::Instant::now();
+    for _ in 0..10000 {
+        part2_regex(&input);
+    }
+    let end = std::time::Instant::now();
+    println!(
+        "10k part2 (regex) in: {}us ({}us/iter)",
+        (end - begin).as_micros(),
+        (end - begin).as_micros() / 10000
+    );
+
+    let begin = std::time::Instant::now();
+    for _ in 0..10000 {
+        part2_no_regex(&input);
+    }
+    let end = std::time::Instant::now();
+    println!(
+        "10k part2 (no regex) in: {}us ({}us/iter)",
+        (end - begin).as_micros(),
+        (end - begin).as_micros() / 10000
+    );
 }
 
 #[test]
