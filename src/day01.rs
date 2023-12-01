@@ -24,7 +24,7 @@ fn part1(input: &str) -> i64 {
     result
 }
 
-fn part2(input: &str) -> i64 {
+fn part2_regex(input: &str) -> i64 {
     let mut result: i64 = 0;
     let exp = regex::Regex::new(r"[0-9]|one|two|three|four|five|six|seven|eight|nine|.*?").unwrap();
     for line in input.lines() {
@@ -63,10 +63,59 @@ fn part2(input: &str) -> i64 {
     result
 }
 
+fn part2_no_regex(input: &str) -> i64 {
+    let mut result: i64 = 0;
+    for line in input.lines().map(str::as_bytes) {
+        let mut first = None;
+        let mut last = None;
+        for (ix, c) in line.iter().enumerate() {
+            let digit = if let b'1'..=b'9' = c {
+                -(b'0' as i16 - *c as i16) as i64
+            } else {
+                match &line[ix..] {
+                    [b'o', b'n', b'e', ..] => 1,
+                    [b't', b'w', b'o', ..] => 2,
+                    [b't', b'h', b'r', b'e', b'e', ..] => 3,
+                    [b'f', b'o', b'u', b'r', ..] => 4,
+                    [b'f', b'i', b'v', b'e', ..] => 5,
+                    [b's', b'i', b'x', ..] => 6,
+                    [b's', b'e', b'v', b'e', b'n', ..] => 7,
+                    [b'e', b'i', b'g', b'h', b't', ..] => 8,
+                    [b'n', b'i', b'n', b'e', ..] => 9,
+                    _ => continue,
+                }
+            };
+            if first.is_none() {
+                first = Some(digit);
+            }
+            last = Some(digit);
+        }
+        let to_add = match (first, last) {
+            (Some(a), Some(b)) => a * 10 + b,
+            _ => 0,
+        };
+        result += to_add;
+    }
+    result
+}
+
 pub fn main() {
     let input = std::fs::read_to_string("./input/day01").unwrap();
     println!("part1: {}", part1(&input));
-    println!("part2: {}", part2(&input));
+    println!("part2 (regex):    {}", part2_regex(&input));
+    println!("part2 (no regex): {}", part2_no_regex(&input));
+}
+
+#[test]
+fn test_facit_part1() {
+    let input = std::fs::read_to_string("./input/day01").unwrap();
+    assert_eq!(part1(&input), 55712);
+}
+
+#[test]
+fn test_facit_part2() {
+    let input = std::fs::read_to_string("./input/day01").unwrap();
+    assert_eq!(part2_no_regex(&input), 55413);
 }
 
 #[test]
@@ -91,10 +140,10 @@ fn example_part2() {
         zoneight234
         7pqrstsixteen
     "#;
-    assert_eq!(part2(input), 281);
+    assert_eq!(part2_no_regex(input), 281);
 }
 #[test]
 fn example_part2_overlapping() {
     let input = r#"eightwo"#;
-    assert_eq!(part2(input), 82);
+    assert_eq!(part2_no_regex(input), 82);
 }
