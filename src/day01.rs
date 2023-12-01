@@ -69,26 +69,6 @@ fn part2_regex(input: &str) -> i64 {
     result
 }
 
-/// General non-regex approach for finding digits within a slice.
-fn get_digit(at: &[u8]) -> Option<i64> {
-    if let Some(c @ b'1'..=b'9') = at.first() {
-        Some(-(b'0' as i16 - *c as i16) as i64)
-    } else {
-        Some(match at {
-            [b'o', b'n', b'e', ..] => 1,
-            [b't', b'w', b'o', ..] => 2,
-            [b't', b'h', b'r', b'e', b'e', ..] => 3,
-            [b'f', b'o', b'u', b'r', ..] => 4,
-            [b'f', b'i', b'v', b'e', ..] => 5,
-            [b's', b'i', b'x', ..] => 6,
-            [b's', b'e', b'v', b'e', b'n', ..] => 7,
-            [b'e', b'i', b'g', b'h', b't', ..] => 8,
-            [b'n', b'i', b'n', b'e', ..] => 9,
-            _ => return None,
-        })
-    }
-}
-
 /// Version 2.
 ///
 /// Here I stop using a regex, and stop handling utf-8.
@@ -176,6 +156,54 @@ fn part2_no_regex_bidir_add_directly(input: &str) -> i64 {
     result
 }
 
+/// Version 5.
+///
+/// Split into lines ourselves, so that str::lines doesn't have to handle utf-8
+/// codepoints, and we can just check for line break bytes instead.
+///
+/// Benchmark on my computer: around 14us/iter (1,530MB/s)
+fn part2_no_regex_bidir_add_directly_byte_lines(input: &str) -> i64 {
+    let mut result: i64 = 0;
+    for line in input.as_bytes().split(|c| *c == b'\n') {
+        for ix in 0..line.len() {
+            if let Some(digit) = get_digit(&line[ix..]) {
+                result += 10 * digit;
+                break;
+            };
+        }
+
+        for ix in (0..line.len()).rev() {
+            if let Some(digit) = get_digit(&line[ix..]) {
+                result += digit;
+                break;
+            };
+        }
+    }
+    result
+}
+
+/// General non-regex approach for finding digits within a slice.
+///
+/// Used in all the non-utf8 solutions.
+fn get_digit(at: &[u8]) -> Option<i64> {
+    if let Some(c @ b'1'..=b'9') = at.first() {
+        Some(-(b'0' as i16 - *c as i16) as i64)
+    } else {
+        Some(match at {
+            [b'o', b'n', b'e', ..] => 1,
+            [b't', b'w', b'o', ..] => 2,
+            [b't', b'h', b'r', b'e', b'e', ..] => 3,
+            [b'f', b'o', b'u', b'r', ..] => 4,
+            [b'f', b'i', b'v', b'e', ..] => 5,
+            [b's', b'i', b'x', ..] => 6,
+            [b's', b'e', b'v', b'e', b'n', ..] => 7,
+            [b'e', b'i', b'g', b'h', b't', ..] => 8,
+            [b'n', b'i', b'n', b'e', ..] => 9,
+            _ => return None,
+        })
+    }
+}
+
 pub fn main() {
     let input = std::fs::read_to_string("./input/day01").unwrap();
     println!("part1: {}", part1(&input));
@@ -185,6 +213,10 @@ pub fn main() {
     println!(
         "part2 (no regex, bidir, add directly): {}",
         part2_no_regex_bidir_add_directly(&input)
+    );
+    println!(
+        "part2 (no regex, bidir, add directly, byte lines): {}",
+        part2_no_regex_bidir_add_directly_byte_lines(&input)
     );
 
     let begin = std::time::Instant::now();
@@ -241,6 +273,17 @@ pub fn main() {
         (end - begin).as_micros(),
         (end - begin).as_micros() / 10000
     );
+
+    let begin = std::time::Instant::now();
+    for _ in 0..10000 {
+        part2_no_regex_bidir_add_directly_byte_lines(&input);
+    }
+    let end = std::time::Instant::now();
+    println!(
+        "10k part2 (no regex, bidir, add directly, byte lines) in: {}us ({}us/iter)",
+        (end - begin).as_micros(),
+        (end - begin).as_micros() / 10000
+    );
 }
 
 #[test]
@@ -256,6 +299,7 @@ fn test_facit_part2() {
     assert_eq!(part2_no_regex(&input), 55413);
     assert_eq!(part2_no_regex_bidir(&input), 55413);
     assert_eq!(part2_no_regex_bidir_add_directly(&input), 55413);
+    assert_eq!(part2_no_regex_bidir_add_directly_byte_lines(&input), 55413);
 }
 
 #[test]
@@ -284,6 +328,7 @@ fn example_part2() {
     assert_eq!(part2_no_regex(input), 281);
     assert_eq!(part2_no_regex_bidir(input), 281);
     assert_eq!(part2_no_regex_bidir_add_directly(input), 281);
+    assert_eq!(part2_no_regex_bidir_add_directly_byte_lines(input), 281);
 }
 #[test]
 fn example_part2_overlapping() {
@@ -292,4 +337,5 @@ fn example_part2_overlapping() {
     assert_eq!(part2_no_regex(input), 82);
     assert_eq!(part2_no_regex_bidir(input), 82);
     assert_eq!(part2_no_regex_bidir_add_directly(input), 82);
+    assert_eq!(part2_no_regex_bidir_add_directly_byte_lines(input), 82);
 }
