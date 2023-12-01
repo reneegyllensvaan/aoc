@@ -10,16 +10,12 @@ fn part1(input: &str) -> i64 {
             }) else {
                 continue;
             };
-
-            if first.is_none() {
-                first = Some(digit);
-            }
+            first.get_or_insert(digit);
             last = Some(digit);
         }
-        match (first, last) {
-            (Some(a), Some(b)) => result += a * 10 + b,
-            _ => {}
-        }
+        if let (Some(a), Some(b)) = (first, last) {
+            result += a * 10 + b;
+        };
     }
     result
 }
@@ -49,16 +45,12 @@ fn part2_regex(input: &str) -> i64 {
                 (_, "nine") => 9,
                 _ => continue,
             };
-            if first.is_none() {
-                first = Some(digit);
-            }
+            first.get_or_insert(digit);
             last = Some(digit);
         }
-        let to_add = match (first, last) {
-            (Some(a), Some(b)) => a * 10 + b,
-            _ => 0,
+        if let (Some(a), Some(b)) = (first, last) {
+            result += a * 10 + b;
         };
-        result += to_add;
     }
     result
 }
@@ -85,16 +77,12 @@ fn part2_no_regex(input: &str) -> i64 {
                     _ => continue,
                 }
             };
-            if first.is_none() {
-                first = Some(digit);
-            }
+            first.get_or_insert(digit);
             last = Some(digit);
         }
-        let to_add = match (first, last) {
-            (Some(a), Some(b)) => a * 10 + b,
-            _ => 0,
+        if let (Some(a), Some(b)) = (first, last) {
+            result += a * 10 + b;
         };
-        result += to_add;
     }
     result
 }
