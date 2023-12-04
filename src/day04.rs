@@ -39,7 +39,7 @@ fn part1(input: &str) -> i64 {
 fn part2(input: &str) -> i64 {
     let mut result: i64 = 0;
 
-    let mut copies = Vec::<usize>::new();
+    let mut copies = Vec::<(usize, i64)>::new();
     for (ix, line) in input.lines().enumerate() {
         let (_card_id, rest) = line.split_once(':').unwrap();
 
@@ -53,21 +53,23 @@ fn part2(input: &str) -> i64 {
             .map(|v| v.parse().unwrap())
             .collect();
 
-        let num_copies = 1 + copies.iter().filter(|v| ix <= **v).count();
-        for _ in 0..num_copies {
-            result += 1;
-            let mut line_matches = 0;
-            for number in &numbers {
-                for guess in &guesses {
-                    if number == guess {
-                        line_matches += 1;
-                        break;
-                    }
+        let num_copies: i64 = 1 + copies
+            .iter()
+            .filter(|v| ix <= v.0)
+            .map(|v| v.1)
+            .sum::<i64>();
+        result += num_copies;
+        let mut line_matches = 0;
+        for number in &numbers {
+            for guess in &guesses {
+                if number == guess {
+                    line_matches += 1;
+                    break;
                 }
             }
-            if line_matches > 0 {
-                copies.push(ix + line_matches);
-            }
+        }
+        if line_matches > 0 {
+            copies.push((ix + line_matches, num_copies));
         }
     }
 
