@@ -180,12 +180,10 @@ fn part2_hash(input: &str) -> i32 {
         .flatten();
 
         for row_parts in target_rows {
-            {
-                for part in row_parts {
-                    let within_span = symbol.2 >= part.span.start - 1 && symbol.2 <= part.span.end;
-                    if within_span {
-                        adj.push(part.clone());
-                    }
+            for part in row_parts {
+                let within_span = symbol.2 >= part.span.start - 1 && symbol.2 <= part.span.end;
+                if within_span {
+                    adj.push(part.clone());
                 }
             }
         }
