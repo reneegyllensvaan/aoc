@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 fn part1(input: &str) -> i64 {
     let mut result: i64 = 0;
 
@@ -75,11 +77,73 @@ fn part2(input: &str) -> i64 {
 
     result
 }
+fn part2_hash_set(input: &str) -> i64 {
+    let mut result: i64 = 0;
+
+    let mut copies = Vec::<(usize, i64)>::new();
+    for (ix, line) in input.lines().enumerate() {
+        let (_card_id, rest) = line.split_once(':').unwrap();
+
+        let (numbers, guesses) = rest.split_once('|').unwrap();
+        let numbers: Vec<i64> = numbers
+            .split_whitespace()
+            .map(|v| v.parse().unwrap())
+            .collect();
+        let guesses: HashSet<i64> = guesses
+            .split_whitespace()
+            .map(|v| v.parse().unwrap())
+            .collect();
+
+        let num_copies: i64 = 1 + copies
+            .iter()
+            .filter(|v| ix <= v.0)
+            .map(|v| v.1)
+            .sum::<i64>();
+        result += num_copies;
+        let mut line_matches = 0;
+        for number in &numbers {
+            if guesses.contains(number) {
+                line_matches += 1;
+                break;
+            }
+        }
+        if line_matches > 0 {
+            copies.push((ix + line_matches, num_copies));
+        }
+    }
+
+    result
+}
 
 pub fn main() {
     let input = std::fs::read_to_string("input/day04").unwrap();
-    println!("part1: {}", part1(&input));
-    println!("part2: {}", part2(&input));
+
+    let iters = 10;
+
+    let fns: [(&'static str, fn(&str) -> i64); 3] = [
+        ("part1", part1),
+        ("part2", part2),
+        ("part2 (hash set)", part2_hash_set),
+    ];
+
+    for (name, f) in fns {
+        println!("{name}: {}", f(&input));
+    }
+
+    for (name, f) in fns {
+        let begin = std::time::Instant::now();
+        for _ in 0..iters {
+            f(&input);
+        }
+        let end = std::time::Instant::now();
+        println!(
+            "{} {} in: {}us ({}us/iter)",
+            iters,
+            name,
+            (end - begin).as_micros(),
+            (end - begin).as_micros() / iters
+        );
+    }
 }
 
 #[test]
