@@ -67,8 +67,28 @@ fn part2(input: &str) -> i64 {
 
 pub fn main() {
     let input = std::fs::read_to_string("input/day02").unwrap();
-    println!("part1: {}", part1(&input));
-    println!("part2: {}", part2(&input));
+    let iters = 1000;
+
+    let fns: [(&'static str, fn(&str) -> i64); 2] = [("part1", part1), ("part2", part2)];
+
+    for (name, f) in fns {
+        println!("{name}: {}", f(&input));
+    }
+
+    for (name, f) in fns {
+        let begin = std::time::Instant::now();
+        for _ in 0..iters {
+            f(&input);
+        }
+        let end = std::time::Instant::now();
+        println!(
+            "{} {} in: {}us ({}us/iter)",
+            iters,
+            name,
+            (end - begin).as_micros(),
+            (end - begin).as_micros() / iters
+        );
+    }
 }
 
 #[test]
