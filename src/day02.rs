@@ -66,7 +66,7 @@ fn part2(input: &str) -> i64 {
 }
 
 pub fn main() {
-    let input = std::fs::read_to_string("src/day02").unwrap();
+    let input = std::fs::read_to_string("input/day02").unwrap();
     println!("part1: {}", part1(&input));
     println!("part2: {}", part2(&input));
 }
