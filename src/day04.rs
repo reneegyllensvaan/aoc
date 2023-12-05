@@ -1,4 +1,7 @@
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
+
+use fnv::FnvHashSet;
+use rustc_hash::FxHashSet;
 
 fn part1(input: &str) -> i64 {
     let mut result: i64 = 0;
@@ -89,7 +92,7 @@ fn part2_hash_set(input: &str) -> i64 {
             .split_whitespace()
             .map(|v| v.parse().unwrap())
             .collect();
-        let guesses: HashSet<i64> = guesses
+        let guesses: FxHashSet<i64> = guesses
             .split_whitespace()
             .map(|v| v.parse().unwrap())
             .collect();
@@ -104,7 +107,6 @@ fn part2_hash_set(input: &str) -> i64 {
         for number in &numbers {
             if guesses.contains(number) {
                 line_matches += 1;
-                break;
             }
         }
         if line_matches > 0 {
@@ -114,16 +116,43 @@ fn part2_hash_set(input: &str) -> i64 {
 
     result
 }
+fn part2_btree(input: &str) -> i64 {
+    let mut result: i64 = 0;
+
+    let mut copies = BTreeMap::<usize, i64>::new();
+    for (ix, line) in input.lines().enumerate() {
+        let (_card_id, rest) = line.split_once(':').unwrap();
+
+        let (numbers, guesses) = rest.split_once('|').unwrap();
+        let numbers: Vec<i64> = numbers.split_whitespace().flat_map(str::parse).collect();
+        let guesses: HashSet<i64> = guesses.split_whitespace().flat_map(str::parse).collect();
+
+        let num_copies: i64 = 1 + copies.range(ix..).map(|v| v.1).sum::<i64>();
+        result += num_copies;
+        let mut line_matches = 0;
+        for number in &numbers {
+            if guesses.contains(number) {
+                line_matches += 1;
+            }
+        }
+        if line_matches > 0 {
+            *copies.entry(ix + line_matches).or_default() += num_copies;
+        }
+    }
+
+    result
+}
 
 pub fn main() {
     let input = std::fs::read_to_string("input/day04").unwrap();
 
-    let iters = 10;
+    let iters = 100;
 
-    let fns: [(&'static str, fn(&str) -> i64); 3] = [
+    let fns: [(&'static str, fn(&str) -> i64); 4] = [
         ("part1", part1),
         ("part2", part2),
         ("part2 (hash set)", part2_hash_set),
+        ("part2 (btree)", part2_btree),
     ];
 
     for (name, f) in fns {
@@ -178,4 +207,6 @@ Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11"#;
 fn test_part2_facit() {
     let input = std::fs::read_to_string("input/day04").unwrap();
     assert_eq!(part2(&input), 5744979);
+    assert_eq!(part2_hash_set(&input), 5744979);
+    assert_eq!(part2_btree(&input), 5744979);
 }
