@@ -1,6 +1,9 @@
 use std::{collections::HashMap, ops::RangeInclusive};
 
-use indicatif::{MultiProgress, ParallelProgressIterator, ProgressBar, ProgressIterator};
+use indicatif::{
+    MultiProgress, ParallelProgressIterator, ProgressBar, ProgressDrawTarget, ProgressIterator,
+    ProgressStyle,
+};
 use itertools::Itertools;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
@@ -347,15 +350,31 @@ fn part2_brute(input: &str) -> i64 {
     }
 
     let progress = MultiProgress::new();
-    let main_bar = ProgressBar::new(seeds.len() as u64);
+    let main_bar = ProgressBar::new(seeds.len() as u64).with_style(
+        ProgressStyle::with_template(
+            "Brute-forcing seed ranges: {bar:40.red/yellow} {pos:>7}/{len:7} {msg}",
+        )
+        .unwrap(),
+    );
+    if cfg!(test) {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
+    }
+
     progress.add(main_bar.clone());
+    main_bar.tick();
     seeds
         .into_par_iter()
         .map(|seed_range| {
             let mut result = i64::MAX;
             let (a, b) = seed_range.clone().into_inner();
-            let bar = ProgressBar::new((b - a) as u64);
+            let bar_style = ProgressStyle::with_template(&format!(
+                "       start={a:<12}: {}",
+                "{bar:40.cyan/blue} {pos:>13}/{len:13} {msg}"
+            ))
+            .unwrap();
+            let bar = ProgressBar::new((b - a) as u64).with_style(bar_style);
             progress.add(bar.clone());
+
             for seed in seed_range.progress_with(bar) {
                 result = result.min(traverse_maps(seed, &maps));
             }
