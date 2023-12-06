@@ -7,7 +7,7 @@ use indicatif::{
 use itertools::Itertools;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
-fn part1(input: &str) -> i64 {
+pub fn part1(input: &str) -> i64 {
     let mut result: i64 = i64::MAX;
 
     let mut lines = input.lines();
@@ -151,7 +151,7 @@ fn traverse_maps(seed: i64, maps: &HashMap<(&str, &str), Vec<(i64, i64, i64)>>) 
 ///
 /// This one was fun. I might have overcomplicated it a bit, but this thing feels pretty solid
 /// still.
-fn part2(input: &str) -> i64 {
+pub fn part2(input: &str) -> i64 {
     let mut lines = input.lines();
     let seeds = lines
         .next()
@@ -305,7 +305,7 @@ fn range_intersect(
 /// Single-threaded version took 635 seconds. That's still very good lol - 0.31us per seed. I guess
 /// parsing was the majority of time in part1.
 #[allow(dead_code)]
-fn part2_brute(input: &str) -> i64 {
+pub fn part2_brute(input: &str) -> i64 {
     let mut lines = input.lines();
     let seeds = lines
         .next()

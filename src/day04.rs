@@ -2,7 +2,7 @@ use std::collections::{BTreeMap, HashSet};
 
 use rustc_hash::FxHashSet;
 
-fn part1(input: &str) -> i64 {
+pub fn part1(input: &str) -> i64 {
     let mut result: i64 = 0;
 
     for line in input.lines() {
@@ -40,7 +40,7 @@ fn part1(input: &str) -> i64 {
     result
 }
 
-fn part2(input: &str) -> i64 {
+pub fn part2(input: &str) -> i64 {
     let mut result: i64 = 0;
 
     let mut copies = Vec::<(usize, i64)>::new();
@@ -79,7 +79,7 @@ fn part2(input: &str) -> i64 {
 
     result
 }
-fn part2_hash_set(input: &str) -> i64 {
+pub fn part2_hash_set(input: &str) -> i64 {
     let mut result: i64 = 0;
 
     let mut copies = Vec::<(usize, i64)>::new();
@@ -115,7 +115,7 @@ fn part2_hash_set(input: &str) -> i64 {
 
     result
 }
-fn part2_btree(input: &str) -> i64 {
+pub fn part2_btree(input: &str) -> i64 {
     let mut result: i64 = 0;
 
     let mut copies = BTreeMap::<usize, i64>::new();

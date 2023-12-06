@@ -17,7 +17,7 @@ struct PartNumber {
 /// This sort of has two versions by flipping which parser the `parse` function calls.
 ///
 /// Altogether a pretty naive solution, but runs plenty well.
-fn part1(input: &str) -> i32 {
+pub fn part1(input: &str) -> i32 {
     let mut result: i32 = 0;
 
     let (parts, symbols) = parse(input);
@@ -45,7 +45,7 @@ fn part1(input: &str) -> i32 {
 ///
 /// Another approach might be to use a linear collection, or even a hash table (since we know we
 /// exactly have three rows to access). That might be more than a quick fix.
-fn part1_btree(input: &str) -> i32 {
+pub fn part1_btree(input: &str) -> i32 {
     let mut result: i32 = 0;
 
     let (parts, symbols) = parse(input);
@@ -72,7 +72,7 @@ fn part1_btree(input: &str) -> i32 {
 ///
 /// I think B-tree iterators either don't pay for themselves at this size (they were big in the
 /// flame graph), or insertion takes too long into the B-tree map.
-fn part1_hash(input: &str) -> i32 {
+pub fn part1_hash(input: &str) -> i32 {
     let mut result: i32 = 0;
 
     let (parts, symbols) = parse(input);
@@ -106,7 +106,7 @@ fn part1_hash(input: &str) -> i32 {
 /// Version 1.
 ///
 /// Same approach as part1, just have to flip the loops.
-fn part2(input: &str) -> i32 {
+pub fn part2(input: &str) -> i32 {
     let mut result: i32 = 0;
 
     let (parts, symbols) = parse(input);
@@ -131,7 +131,7 @@ fn part2(input: &str) -> i32 {
 ///
 /// Same optimization as part1_btree. Use a B-tree, grouping the parts by row, then iterate over
 /// only the range of affected rows.
-fn part2_btree(input: &str) -> i32 {
+pub fn part2_btree(input: &str) -> i32 {
     let mut result: i32 = 0;
 
     let (parts_vec, symbols) = parse(input);
@@ -162,7 +162,7 @@ fn part2_btree(input: &str) -> i32 {
 ///
 /// Same optimization as part1_hash. Having a bounded set of rows to check means we can check
 /// faster with a hash map.
-fn part2_hash(input: &str) -> i32 {
+pub fn part2_hash(input: &str) -> i32 {
     let mut result: i32 = 0;
 
     let (parts, symbols) = parse(input);
@@ -195,7 +195,7 @@ fn part2_hash(input: &str) -> i32 {
 }
 
 /// Baseline benchmark of parsing with a regex
-fn part2_regex(input: &str) -> i32 {
+pub fn part2_regex(input: &str) -> i32 {
     let mut result: i32 = 0;
 
     let (parts, symbols) = parse_regex(input);
@@ -217,7 +217,7 @@ fn part2_regex(input: &str) -> i32 {
 }
 
 /// Baseline benchmark of parsing with the non-regex parser
-fn part2_no_regex(input: &str) -> i32 {
+pub fn part2_no_regex(input: &str) -> i32 {
     let mut result: i32 = 0;
 
     let (parts, symbols) = parse_no_regex(input);

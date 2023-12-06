@@ -5,7 +5,7 @@
 /// Notably, this works with UTF-8.
 ///
 /// Benchmark on my computer: around 41us/iter (522MB/s)
-fn part1(input: &str) -> i64 {
+pub fn part1(input: &str) -> i64 {
     let mut result: i64 = 0;
     for line in input.lines() {
         let mut first = None;
@@ -34,7 +34,7 @@ fn part1(input: &str) -> i64 {
 /// I use a regex here, which is kinda boring imo.
 ///
 /// Benchmark on my computer: around 659us/iter (33MB/s)
-fn part2_regex(input: &str) -> i64 {
+pub fn part2_regex(input: &str) -> i64 {
     let mut result: i64 = 0;
     let exp = regex::Regex::new(r"[0-9]|one|two|three|four|five|six|seven|eight|nine|.*?").unwrap();
     for line in input.lines() {
@@ -74,7 +74,7 @@ fn part2_regex(input: &str) -> i64 {
 /// Here I stop using a regex, and stop handling utf-8.
 ///
 /// Benchmark on my computer: around 123us/iter (174MB/s)
-fn part2_no_regex(input: &str) -> i64 {
+pub fn part2_no_regex(input: &str) -> i64 {
     let mut result: i64 = 0;
     for line in input.lines().map(str::as_bytes) {
         let mut first = None;
@@ -102,7 +102,7 @@ fn part2_no_regex(input: &str) -> i64 {
 /// digit.
 ///
 /// Benchmark on my computer: around 55us/iter (390MB/s)
-fn part2_no_regex_bidir(input: &str) -> i64 {
+pub fn part2_no_regex_bidir(input: &str) -> i64 {
     let mut result: i64 = 0;
     for line in input.lines().map(str::as_bytes) {
         let mut first = None;
@@ -136,7 +136,7 @@ fn part2_no_regex_bidir(input: &str) -> i64 {
 /// rid of some stack space and branches.
 ///
 /// Benchmark on my computer: around 50us/iter (428MB/s)
-fn part2_no_regex_bidir_add_directly(input: &str) -> i64 {
+pub fn part2_no_regex_bidir_add_directly(input: &str) -> i64 {
     let mut result: i64 = 0;
     for line in input.lines().map(str::as_bytes) {
         for ix in 0..line.len() {
@@ -162,7 +162,7 @@ fn part2_no_regex_bidir_add_directly(input: &str) -> i64 {
 /// codepoints, and we can just check for line break bytes instead.
 ///
 /// Benchmark on my computer: around 41us/iter (522MB/s)
-fn part2_no_regex_bidir_add_directly_byte_lines(input: &str) -> i64 {
+pub fn part2_no_regex_bidir_add_directly_byte_lines(input: &str) -> i64 {
     let mut result: i64 = 0;
     for line in input.as_bytes().split(|c| *c == b'\n') {
         for ix in 0..line.len() {

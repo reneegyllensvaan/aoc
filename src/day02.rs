@@ -1,4 +1,4 @@
-fn part1(input: &str) -> i64 {
+pub fn part1(input: &str) -> i64 {
     let mut result = 0;
     'line: for line in input.lines() {
         if line.len() < 5 {
@@ -29,7 +29,7 @@ fn part1(input: &str) -> i64 {
     result
 }
 
-fn part2(input: &str) -> i64 {
+pub fn part2(input: &str) -> i64 {
     let mut result = 0;
     for line in input.lines() {
         if line.len() < 5 {

@@ -3,7 +3,7 @@ use itertools::Itertools;
 /// Brute-force solution.
 ///
 /// Iterates over all the different charges.
-fn part1(input: &str) -> i64 {
+pub fn part1(input: &str) -> i64 {
     let mut lines = input.lines();
     let times = lines
         .next()
@@ -42,7 +42,7 @@ fn part1(input: &str) -> i64 {
 }
 
 #[allow(dead_code)]
-fn part2_math(input: &str) -> i64 {
+pub fn part2_math(input: &str) -> i64 {
     let mut lines = input.lines();
     let time = lines
         .next()
@@ -70,7 +70,7 @@ fn part2_math(input: &str) -> i64 {
         + 1
 }
 
-fn part2(input: &str) -> i64 {
+pub fn part2(input: &str) -> i64 {
     let mut lines = input.lines();
     let time = lines
         .next()
