@@ -1,6 +1,5 @@
 use std::collections::{BTreeMap, HashSet};
 
-use fnv::FnvHashSet;
 use rustc_hash::FxHashSet;
 
 fn part1(input: &str) -> i64 {
