@@ -1,6 +1,8 @@
 use std::{collections::HashMap, ops::RangeInclusive};
 
+use indicatif::{MultiProgress, ParallelProgressIterator, ProgressBar, ProgressIterator};
 use itertools::Itertools;
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 fn part1(input: &str) -> i64 {
     let mut result: i64 = i64::MAX;
@@ -344,15 +346,22 @@ fn part2_brute(input: &str) -> i64 {
         maps.insert(path, vec);
     }
 
+    let progress = MultiProgress::new();
+    let main_bar = ProgressBar::new(seeds.len() as u64);
+    progress.add(main_bar.clone());
     seeds
-        .into_iter()
+        .into_par_iter()
         .map(|seed_range| {
             let mut result = i64::MAX;
-            for seed in seed_range {
+            let (a, b) = seed_range.clone().into_inner();
+            let bar = ProgressBar::new((b - a) as u64);
+            progress.add(bar.clone());
+            for seed in seed_range.progress_with(bar) {
                 result = result.min(traverse_maps(seed, &maps));
             }
             result
         })
+        .progress_with(main_bar)
         .min()
         .unwrap()
 }
@@ -361,7 +370,7 @@ pub fn main() {
     let input = std::fs::read_to_string("input/day05").unwrap();
 
     // This one takes a couple minutes to run
-    // println!("part2_brute(input): {:?}", part2_brute(&input));
+    println!("part2_brute(input): {:?}", part2_brute(&input));
 
     let iters = 1000;
 
