@@ -4,12 +4,4 @@ pub mod day03;
 pub mod day04;
 pub mod day05;
 pub mod day06;
-
-// fn main() {
-//     // day01::main();
-//     // day02::main();
-//     // day03::main();
-//     // day04::main();
-//     // day05::main();
-//     crate::day06::main();
-// }
+pub mod day07;
