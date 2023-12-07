@@ -111,7 +111,7 @@ pub fn part2(input: &str) -> i64 {
 pub fn main() {
     let input = std::fs::read_to_string("input/day06").unwrap();
 
-    let iters = 1000;
+    let iters = 10;
 
     let fns: [(&'static str, fn(&str) -> i64); 3] = [
         ("part1", part1),
@@ -120,9 +120,9 @@ pub fn main() {
     ];
 
     for (name, f) in fns {
-        println!("{name}: {}", f(&input));
+        println!("  {name}: {}", f(&input));
     }
-
+    println!("");
     for (name, f) in fns {
         let begin = std::time::Instant::now();
         for _ in 0..iters {
@@ -130,7 +130,7 @@ pub fn main() {
         }
         let end = std::time::Instant::now();
         println!(
-            "{} {} in: {}ns ({}ns/iter)",
+            "  {} {} in: {}ns ({}ns/iter)",
             iters,
             name,
             (end - begin).as_nanos(),

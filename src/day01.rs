@@ -206,8 +206,7 @@ fn get_digit(at: &[u8]) -> Option<i64> {
 
 pub fn main() {
     let input = std::fs::read_to_string("./input/day01").unwrap();
-    println!("part1: {}", part1(&input));
-    let iters = 10000;
+    let iters = 1000;
 
     let fns: [(&'static str, fn(&str) -> i64); 5] = [
         ("part2 (regex)", part2_regex),
@@ -223,7 +222,7 @@ pub fn main() {
         ),
     ];
     for (name, f) in fns {
-        println!("{name}: {}", f(&input));
+        println!("  {name}: {}", f(&input));
     }
     println!("");
     for (name, f) in fns {
@@ -233,7 +232,7 @@ pub fn main() {
         }
         let end = std::time::Instant::now();
         println!(
-            "{} {} in: {}us ({}us/iter)",
+            "  {} {} in: {}us ({}us/iter)",
             iters,
             name,
             (end - begin).as_micros(),

@@ -385,20 +385,238 @@ pub fn part2_brute(input: &str) -> i64 {
         .unwrap()
 }
 
+/// Version 3.
+///
+/// A faster brute-force solution to part2.
+///
+/// Previous version was doing a hash and hashmap lookup for every seed. Here, i just get the
+/// entries from the hash map once and use them as variables.
+///
+/// I also sort the maps in descending order of _size_. Figured larger maps are more likely to
+/// contain our value, so we can break early more often.
+///
+/// This one ran in 14 seconds on my machine. imo that's very respectable.
+pub fn part2_brute_faster(input: &str) -> i64 {
+    let mut lines = input.lines();
+    let seeds = lines
+        .next()
+        .unwrap()
+        .split_once(':')
+        .unwrap()
+        .1
+        .split_whitespace()
+        .flat_map(|v| v.parse::<i64>())
+        .chunks(2)
+        .into_iter()
+        .filter_map(|mut v| {
+            let start = v.next()?;
+            let num = v.next()?;
+            Some(start..=(start + num - 1))
+        })
+        .collect::<Vec<RangeInclusive<i64>>>();
+
+    let mut maps = HashMap::<(&str, &str), Vec<(i64, i64, i64)>>::new();
+    let mut current_map: Option<((&str, &str), Vec<(i64, i64, i64)>)> = None;
+    for line in lines {
+        if line.len() == 0 {
+            if let Some((path, vec)) = current_map.take() {
+                maps.insert(path, vec);
+            }
+            continue;
+        }
+
+        if current_map.is_none() {
+            let mapping = line.split_once(' ').unwrap().0.split('-').collect_vec();
+            current_map = Some(((mapping[0], mapping[2]), Vec::new()));
+        } else if let Some((_, ref mut v)) = &mut current_map {
+            let mut mapping = line.split(' ').map(|v| v.parse::<i64>().unwrap());
+            let to = mapping.next().unwrap();
+            let from = mapping.next().unwrap();
+            let len = mapping.next().unwrap();
+            v.push((to, from, len));
+        }
+    }
+    if let Some((path, vec)) = current_map.take() {
+        maps.insert(path, vec);
+    }
+
+    for (_, map) in maps.iter_mut() {
+        map.sort_unstable_by_key(|v| -v.2);
+    }
+
+    let seed_to_soil = maps.get(&("seed", "soil")).unwrap();
+    let soil_to_fertilizer = maps.get(&("soil", "fertilizer")).unwrap();
+    let fertilizer_to_water = maps.get(&("fertilizer", "water")).unwrap();
+    let water_to_light = maps.get(&("water", "light")).unwrap();
+    let light_to_temperature = maps.get(&("light", "temperature")).unwrap();
+    let temperature_to_humidity = maps.get(&("temperature", "humidity")).unwrap();
+    let humidity_to_location = maps.get(&("humidity", "location")).unwrap();
+    fn map_through(id: i64, maps: &[(i64, i64, i64)]) -> i64 {
+        maps.iter()
+            .find_map(|(to, from, len)| {
+                if id >= *from && id <= (from + len - 1) {
+                    Some(to + id - from)
+                } else {
+                    None
+                }
+            })
+            .unwrap_or(id)
+    }
+    seeds
+        .into_par_iter()
+        .map(|seed_range| {
+            let mut result = i64::MAX;
+            for seed in seed_range {
+                let soil = map_through(seed, &seed_to_soil);
+                let fertilizer = map_through(soil, &soil_to_fertilizer);
+                let water = map_through(fertilizer, &fertilizer_to_water);
+                let light = map_through(water, &water_to_light);
+                let temperature = map_through(light, &light_to_temperature);
+                let humidity = map_through(temperature, &temperature_to_humidity);
+                let location = map_through(humidity, &humidity_to_location);
+
+                result = result.min(location);
+            }
+            result
+        })
+        .min()
+        .unwrap()
+}
+
+/// Version 4.
+///
+/// This one is slower, but uses the [`indicatif`] crate to show progress bars for each seed range.
+///
+/// It takes like twice as long as without progress bars because the loop is so trivial, but it
+/// looks cool so i keep it in here.
+pub fn part2_brute_faster_with_progress(input: &str) -> i64 {
+    let mut lines = input.lines();
+    let seeds = lines
+        .next()
+        .unwrap()
+        .split_once(':')
+        .unwrap()
+        .1
+        .split_whitespace()
+        .flat_map(|v| v.parse::<i64>())
+        .chunks(2)
+        .into_iter()
+        .filter_map(|mut v| {
+            let start = v.next()?;
+            let num = v.next()?;
+            Some(start..=(start + num - 1))
+        })
+        .collect::<Vec<RangeInclusive<i64>>>();
+
+    let mut maps = HashMap::<(&str, &str), Vec<(i64, i64, i64)>>::new();
+    let mut current_map: Option<((&str, &str), Vec<(i64, i64, i64)>)> = None;
+    for line in lines {
+        if line.len() == 0 {
+            if let Some((path, vec)) = current_map.take() {
+                maps.insert(path, vec);
+            }
+            continue;
+        }
+
+        if current_map.is_none() {
+            let mapping = line.split_once(' ').unwrap().0.split('-').collect_vec();
+            current_map = Some(((mapping[0], mapping[2]), Vec::new()));
+        } else if let Some((_, ref mut v)) = &mut current_map {
+            let mut mapping = line.split(' ').map(|v| v.parse::<i64>().unwrap());
+            let to = mapping.next().unwrap();
+            let from = mapping.next().unwrap();
+            let len = mapping.next().unwrap();
+            v.push((to, from, len));
+        }
+    }
+    if let Some((path, vec)) = current_map.take() {
+        maps.insert(path, vec);
+    }
+
+    for (_, map) in maps.iter_mut() {
+        map.sort_unstable_by_key(|v| -v.2);
+    }
+
+    let progress = MultiProgress::new();
+    let main_bar = ProgressBar::new(seeds.len() as u64).with_style(
+        ProgressStyle::with_template(
+            "Brute-forcing seed ranges: {bar:40.red/yellow} {pos:>7}/{len:7} {msg}",
+        )
+        .unwrap(),
+    );
+    if cfg!(test) {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
+    }
+    progress.add(main_bar.clone());
+    main_bar.tick();
+
+    let seed_to_soil = maps.get(&("seed", "soil")).unwrap();
+    let soil_to_fertilizer = maps.get(&("soil", "fertilizer")).unwrap();
+    let fertilizer_to_water = maps.get(&("fertilizer", "water")).unwrap();
+    let water_to_light = maps.get(&("water", "light")).unwrap();
+    let light_to_temperature = maps.get(&("light", "temperature")).unwrap();
+    let temperature_to_humidity = maps.get(&("temperature", "humidity")).unwrap();
+    let humidity_to_location = maps.get(&("humidity", "location")).unwrap();
+    fn map_through(seed: i64, (to, from, len): &(i64, i64, i64)) -> Option<i64> {
+        if seed >= *from && seed <= (from + len - 1) {
+            Some(to + seed - from)
+        } else {
+            None
+        }
+    }
+    fn map_through_all(id: i64, maps: &[(i64, i64, i64)]) -> i64 {
+        maps.iter()
+            .find_map(|map| map_through(id, map))
+            .unwrap_or(id)
+    }
+    seeds
+        .into_par_iter()
+        .map(|seed_range| {
+            let mut result = i64::MAX;
+            let (a, b) = seed_range.clone().into_inner();
+            let bar_style = ProgressStyle::with_template(&format!(
+                "       start={a:<12}: {}",
+                "{bar:40.cyan/blue} {pos:>13}/{len:13} {msg}"
+            ))
+            .unwrap();
+            let bar = ProgressBar::new((b - a) as u64).with_style(bar_style);
+            progress.add(bar.clone());
+
+            for seed in seed_range.progress_with(bar) {
+                let soil = map_through_all(seed, &seed_to_soil);
+                let fertilizer = map_through_all(soil, &soil_to_fertilizer);
+                let water = map_through_all(fertilizer, &fertilizer_to_water);
+                let light = map_through_all(water, &water_to_light);
+                let temperature = map_through_all(light, &light_to_temperature);
+                let humidity = map_through_all(temperature, &temperature_to_humidity);
+                let location = map_through_all(humidity, &humidity_to_location);
+
+                result = result.min(location);
+            }
+            result
+        })
+        .progress_with(main_bar)
+        .min()
+        .unwrap()
+}
+
 pub fn main() {
     let input = std::fs::read_to_string("input/day05").unwrap();
 
     // This one takes a couple minutes to run
-    println!("part2_brute(input): {:?}", part2_brute(&input));
+    // println!(
+    //     "part2_brute_faster(input): {:?}",
+    //     part2_brute_faster(&input)
+    // );
 
     let iters = 1000;
 
     let fns: [(&'static str, fn(&str) -> i64); 2] = [("part1", part1), ("part2", part2)];
 
     for (name, f) in fns {
-        println!("{name}: {}", f(&input));
+        println!("  {name}: {}", f(&input));
     }
-
+    println!("");
     for (name, f) in fns {
         let begin = std::time::Instant::now();
         for _ in 0..iters {
@@ -406,7 +624,7 @@ pub fn main() {
         }
         let end = std::time::Instant::now();
         println!(
-            "{} {} in: {}us ({}us/iter)",
+            "  {} {} in: {}us ({}us/iter)",
             iters,
             name,
             (end - begin).as_micros(),
@@ -490,6 +708,7 @@ humidity-to-location map:
 56 93 4"#;
     assert_eq!(part2(input), 46);
     assert_eq!(part2_brute(input), 46);
+    assert_eq!(part2_brute_faster(input), 46);
 }
 
 #[test]

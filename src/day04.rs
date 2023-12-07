@@ -155,9 +155,9 @@ pub fn main() {
     ];
 
     for (name, f) in fns {
-        println!("{name}: {}", f(&input));
+        println!("  {name}: {}", f(&input));
     }
-
+    println!("");
     for (name, f) in fns {
         let begin = std::time::Instant::now();
         for _ in 0..iters {
@@ -165,7 +165,7 @@ pub fn main() {
         }
         let end = std::time::Instant::now();
         println!(
-            "{} {} in: {}us ({}us/iter)",
+            "  {} {} in: {}us ({}us/iter)",
             iters,
             name,
             (end - begin).as_micros(),
