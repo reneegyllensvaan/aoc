@@ -59,19 +59,13 @@ pub fn part2(input: &str) -> i64 {
 
     games.sort_by_key(|(g, _)| (match_type(g), g.clone()));
 
-    for (game, _) in games.iter() {
-        println!("game={:?} rank={}", game, match_type(game));
-    }
-
     games
         .iter()
-        .inspect(|g| println!("g: {g:?}"))
         .zip(1..)
         .map(|((_, score), rank)| score * rank)
         .sum()
 }
 fn match_type(v: &[u8]) -> i64 {
-    let jokers = v.iter().filter(|c| **c == 0).count() as i64;
     let mut s = v.to_owned();
     s.sort_unstable();
     let mut a = s
@@ -82,18 +76,22 @@ fn match_type(v: &[u8]) -> i64 {
         .collect_vec();
     a.sort_unstable_by_key(|c| -c);
     match &a[..] {
-        [4, ..] if jokers >= 1 => 7,
-        [3, ..] if jokers >= 1 => 5 + jokers,
-        [2, ..] if jokers == 2 => 6,
-        [2, ..] if jokers == 3 => 7,
-        [2, 2] if jokers == 1 => 5,
-        [] => 7,
-        [1] => 7,
-        [2, 1, 1] => 4,
-        [1, 1] => 6,
-        [1, 1, 1] => 4,
+        // upgrade to 5 of a kind
+        [1..=4] | [] => 7,
+
+        // upgrade to 4 of a kind
+        [1..=3, 1] => 6,
+
+        // upgrade to full house
+        [2, 2] => 5,
+
+        // upgrade to two pair
+        [1 | 2, 1, 1] => 4,
+
+        // upgrade to pair
         [1, 1, 1, 1] => 2,
 
+        // no jokers, handle like normal hand
         [5] => 7,
         [4, 1] => 6,
         [3, 2] => 5,
@@ -108,7 +106,7 @@ fn match_type(v: &[u8]) -> i64 {
 pub fn main() {
     let input = std::fs::read_to_string("input/day07").unwrap();
 
-    let iters = 1000;
+    let iters = 100;
 
     let fns: [(&'static str, fn(&str) -> i64); 2] = [("part1", part1), ("part2", part2)];
 
