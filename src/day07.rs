@@ -1,3 +1,5 @@
+use std::cmp::Reverse;
+
 use itertools::Itertools;
 
 pub fn part1(input: &str) -> i64 {
@@ -44,23 +46,13 @@ fn into_card_powers(input: &[u8], jokers: bool) -> Vec<u8> {
 }
 
 pub fn part2(input: &str) -> i64 {
-    let mut games = input
+    input
         .split_whitespace()
         .chunks(2)
         .into_iter()
         .map(|v| v.tuple_windows().next().unwrap())
-        .map(|(a, b)| {
-            (
-                into_card_powers(a.as_bytes(), true),
-                b.parse::<i64>().unwrap(),
-            )
-        })
-        .collect::<Vec<_>>();
-
-    games.sort_by_key(|(g, _)| (match_type(g), g.clone()));
-
-    games
-        .iter()
+        .map::<(_, i64), _>(|(a, b)| (into_card_powers(a.as_bytes(), true), b.parse().unwrap()))
+        .sorted_unstable_by_key(|(g, _)| (match_type(g), g.clone()))
         .zip(1..)
         .map(|((_, score), rank)| score * rank)
         .sum()
@@ -72,9 +64,9 @@ fn match_type(v: &[u8]) -> i64 {
         .iter()
         .filter(|c| **c != 0)
         .dedup_with_count()
-        .map(|(c, _)| (c as i64))
+        .map(|v| v.0)
         .collect_vec();
-    a.sort_unstable_by_key(|c| -c);
+    a.sort_unstable_by_key(|c| Reverse(*c));
     match &a[..] {
         // upgrade to 5 of a kind
         [1..=4] | [] => 7,
