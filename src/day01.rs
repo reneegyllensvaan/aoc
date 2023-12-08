@@ -209,6 +209,7 @@ pub fn main() {
     let iters = 1000;
 
     let fns: [(&'static str, fn(&str) -> i64); 5] = [
+        ("part1", part1),
         ("part2 (regex)", part2_regex),
         ("part2 (no regex)", part2_no_regex),
         ("part2 (no regex, bidir)", part2_no_regex_bidir),
