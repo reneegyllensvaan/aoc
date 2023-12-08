@@ -24,6 +24,7 @@ pub fn part1(input: &str) -> i64 {
         .map(|((_, score), rank)| score * rank)
         .sum()
 }
+
 fn into_card_powers(input: &[u8], jokers: bool) -> Vec<u8> {
     input
         .iter()
@@ -46,13 +47,23 @@ fn into_card_powers(input: &[u8], jokers: bool) -> Vec<u8> {
 }
 
 pub fn part2(input: &str) -> i64 {
-    input
+    let mut games = input
         .split_whitespace()
         .chunks(2)
         .into_iter()
         .map(|v| v.tuple_windows().next().unwrap())
-        .map::<(_, i64), _>(|(a, b)| (into_card_powers(a.as_bytes(), true), b.parse().unwrap()))
-        .sorted_unstable_by_key(|(g, _)| (match_type(g), g.clone()))
+        .map(|(a, b)| {
+            (
+                into_card_powers(a.as_bytes(), true),
+                b.parse::<i64>().unwrap(),
+            )
+        })
+        .collect::<Vec<_>>();
+
+    games.sort_by_key(|(g, _)| (match_type(g), g.clone()));
+
+    games
+        .iter()
         .zip(1..)
         .map(|((_, score), rank)| score * rank)
         .sum()
@@ -95,12 +106,51 @@ fn match_type(v: &[u8]) -> i64 {
     }
 }
 
+/// Version 2.
+///
+/// Sorting was taking up a heck of a time, because i ran [`match_type`] potentially lots of times.
+/// `match_type` is sort of expensive because it does both allocations and sorting.
+///
+/// Solved by just running it once in the iterator and sorting with it allocated.
+///
+/// Runs in about 220us/iter for me - I'm happy enough with that.
+///
+/// Further optimization might mean I have to break up my pretty little iterator chain, and we
+/// can't have that, can we?
+pub fn solve_faster(input: &str, jokers: bool) -> i64 {
+    input
+        .lines()
+        .flat_map(|v| v.split_once(' '))
+        .map(|(a, b)| {
+            (
+                into_card_powers(a.as_bytes(), jokers),
+                b.parse::<i64>().unwrap(),
+            )
+        })
+        .map(|(g, bid)| (match_type(&g), g, bid))
+        .sorted_unstable()
+        .zip(1..)
+        .map(|((_, _, bid), score)| score * bid)
+        .sum()
+}
+pub fn part1_faster(input: &str) -> i64 {
+    solve_faster(input, false)
+}
+pub fn part2_faster(input: &str) -> i64 {
+    solve_faster(input, true)
+}
+
 pub fn main() {
     let input = std::fs::read_to_string("input/day07").unwrap();
 
-    let iters = 100;
+    let iters = 1000;
 
-    let fns: [(&'static str, fn(&str) -> i64); 2] = [("part1", part1), ("part2", part2)];
+    let fns: [(&'static str, fn(&str) -> i64); 4] = [
+        ("part1", part1),
+        ("part1 (faster)", part1_faster),
+        ("part2", part2),
+        ("part2 (faster)", part2_faster),
+    ];
 
     for (name, f) in fns {
         println!("  {name}: {}", f(&input));
@@ -130,6 +180,7 @@ KK677 28
 KTJJT 220
 QQQJA 483"#;
     assert_eq!(part1(input), 6440);
+    assert_eq!(part1_faster(input), 6440);
 }
 
 #[test]
@@ -140,18 +191,21 @@ KK677 28
 KTJJT 220
 QQQJA 483"#;
     assert_eq!(part2(input), 5905);
+    assert_eq!(part2_faster(input), 5905);
 }
 
 #[test]
 fn test_part1_facit() {
     let input = std::fs::read_to_string("input/day07").unwrap();
     assert_eq!(part1(&input), 250058342);
+    assert_eq!(part1_faster(&input), 250058342);
 }
 
 #[test]
 fn test_part2_facit() {
     let input = std::fs::read_to_string("input/day07").unwrap();
     assert_eq!(part2(&input), 250506580);
+    assert_eq!(part2_faster(&input), 250506580);
 }
 
 #[test]
