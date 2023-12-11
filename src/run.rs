@@ -3,7 +3,7 @@ fn main() {
     if target.len() == 0 {
         target.push("all".to_string());
     }
-    let fns: [(&'static str, fn()); 7] = [
+    let fns: [(&'static str, fn()); 8] = [
         ("day01", aoc23::day01::main),
         ("day02", aoc23::day02::main),
         ("day03", aoc23::day03::main),
@@ -11,6 +11,7 @@ fn main() {
         ("day05", aoc23::day05::main),
         ("day06", aoc23::day06::main),
         ("day07", aoc23::day07::main),
+        ("day08", aoc23::day08::main),
     ];
     for t in target {
         for (name, f) in fns {

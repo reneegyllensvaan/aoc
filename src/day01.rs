@@ -208,7 +208,7 @@ pub fn main() {
     let input = std::fs::read_to_string("./input/day01").unwrap();
     let iters = 1000;
 
-    let fns: [(&'static str, fn(&str) -> i64); 5] = [
+    let fns: [(&'static str, fn(&str) -> i64); 6] = [
         ("part1", part1),
         ("part2 (regex)", part2_regex),
         ("part2 (no regex)", part2_no_regex),
