@@ -3,7 +3,7 @@ fn main() {
     if target.len() == 0 {
         target.push("all".to_string());
     }
-    let fns: [(&'static str, fn()); 9] = [
+    let fns: Vec<(&'static str, fn())> = vec![
         ("day01", aoc23::day01::main),
         ("day02", aoc23::day02::main),
         ("day03", aoc23::day03::main),
@@ -13,10 +13,11 @@ fn main() {
         ("day07", aoc23::day07::main),
         ("day08", aoc23::day08::main),
         ("day09", aoc23::day09::main),
+        ("day10", aoc23::day10::main),
     ];
     for t in target {
-        for (name, f) in fns {
-            if t == "all" || t == name {
+        for (name, f) in &fns {
+            if t == "all" || t == *name {
                 println!("\n{name}:");
                 f();
             }
