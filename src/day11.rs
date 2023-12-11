@@ -1,56 +1,6 @@
 use itertools::Itertools;
 
-pub fn part1(input: &str) -> i64 {
-    let mut rows = 0i64;
-    let mut cols = 0i64;
-    let mut galaxies = Vec::<(i64, i64)>::new();
-    for (row, line) in input.lines().enumerate() {
-        cols = line.len() as i64;
-        rows += 1;
-
-        for (col, c) in line.chars().enumerate() {
-            if c == '#' {
-                galaxies.push((row as i64, col as i64));
-            }
-        }
-    }
-
-    let expanded_rows = (0..rows)
-        .filter(|row| !galaxies.iter().any(|(r, _)| r == row))
-        .collect_vec();
-    let expanded_cols = (0..cols)
-        .filter(|col| !galaxies.iter().any(|(_, c)| c == col))
-        .collect_vec();
-
-    let mut result = 0;
-    for a in &galaxies {
-        for b in &galaxies {
-            // skipping a>b ensures we only do each pair once
-            if a == b || a > b {
-                continue;
-            }
-            let y0 = a.0.min(b.0);
-            let y1 = a.0.max(b.0);
-            let y_ex = expanded_rows
-                .iter()
-                .filter(|row| **row > y0 && **row < y1)
-                .count() as i64;
-
-            let x0 = a.1.min(b.1);
-            let x1 = a.1.max(b.1);
-            let x_ex = expanded_cols
-                .iter()
-                .filter(|col| **col > x0 && **col < x1)
-                .count() as i64;
-
-            result += y1 - y0 + y_ex + x1 - x0 + x_ex;
-        }
-    }
-
-    result
-}
-
-pub fn part2(input: &str) -> i64 {
+fn solve(input: &str, factor: i64) -> i64 {
     let mut rows = 0i64;
     let mut cols = 0i64;
     let mut galaxies = Vec::<(i64, i64)>::new();
@@ -84,7 +34,7 @@ pub fn part2(input: &str) -> i64 {
             let y_ex: i64 = expanded_rows
                 .iter()
                 .filter(|row| **row > y0 && **row < y1)
-                .map(|_| 999999)
+                .map(|_| factor - 1)
                 .sum();
 
             let x0 = a.1.min(b.1);
@@ -92,7 +42,7 @@ pub fn part2(input: &str) -> i64 {
             let x_ex: i64 = expanded_cols
                 .iter()
                 .filter(|col| **col > x0 && **col < x1)
-                .map(|_| 999999)
+                .map(|_| factor - 1)
                 .sum();
 
             result += y1 - y0 + y_ex + x1 - x0 + x_ex;
@@ -100,6 +50,14 @@ pub fn part2(input: &str) -> i64 {
     }
 
     result
+}
+
+pub fn part1(input: &str) -> i64 {
+    solve(input, 2)
+}
+
+pub fn part2(input: &str) -> i64 {
+    solve(input, 1000000)
 }
 
 pub fn main() {
