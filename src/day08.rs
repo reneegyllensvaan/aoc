@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 
-use itertools::Itertools;
-
 pub fn part1(input: &str) -> i64 {
     let mut paths = HashMap::<&str, (&str, &str)>::new();
     let mut lines = input.lines();
