@@ -15,6 +15,7 @@ fn main() {
         ("day09", aoc23::day09::main),
         ("day10", aoc23::day10::main),
         ("day11", aoc23::day11::main),
+        ("day12", aoc23::day12::main),
     ];
     for t in target {
         for (name, f) in &fns {
