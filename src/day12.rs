@@ -64,12 +64,184 @@ pub fn part2(input: &str) -> i64 {
     result
 }
 
+/// This one was basically translated line-by-line from this post:
+/// https://forums.swift.org/t/advent-of-code-2023/68749/61
+///
+/// I just wanted to get it in a format i can understand so i can analyze it. It's a very cool
+/// approach!
+pub fn part2_dfa(contents: &str) -> i64 {
+    enum NodeType {
+        StartOfGroup,
+        MidGroup,
+        EndOfGroup,
+        Finished,
+    }
+    impl NodeType {
+        fn operational_move(&self) -> Option<usize> {
+            match self {
+                Self::StartOfGroup | Self::Finished => Some(0),
+                Self::MidGroup => None,
+                Self::EndOfGroup => Some(1),
+            }
+        }
+        fn damaged_move(&self) -> Option<usize> {
+            match self {
+                Self::StartOfGroup | Self::MidGroup => Some(1),
+                Self::EndOfGroup | Self::Finished => None,
+            }
+        }
+    }
+
+    fn make_node_types(groups: &[usize]) -> Vec<NodeType> {
+        let mut result: Vec<NodeType> = vec![];
+        for group in groups {
+            result.push(NodeType::StartOfGroup);
+            for _ in 0..(group - 1) {
+                result.push(NodeType::MidGroup);
+            }
+            result.push(NodeType::EndOfGroup);
+        }
+        result.push(NodeType::Finished);
+        return result;
+    }
+
+    fn next(c: char, nodes: &[NodeType], counts: &mut [usize]) {
+        let operation_move = c != '#';
+        let damage_move = c != '.';
+        for (i, node) in nodes.iter().enumerate().rev() {
+            let n = counts[i];
+            if n <= 0 {
+                continue;
+            }
+            counts[i] = 0;
+            if damage_move {
+                if let Some(m) = node.damaged_move() {
+                    counts[i + m] += n;
+                }
+            }
+            if operation_move {
+                if let Some(m) = nodes[i].operational_move() {
+                    counts[i + m] += n;
+                }
+            }
+        }
+    }
+
+    let mut total = 0;
+    for line in contents.lines() {
+        let (springs, groups) = line.split_once(' ').unwrap();
+        let groups = groups
+            .split(',')
+            .map(|v| v.parse::<usize>().unwrap())
+            .collect_vec();
+
+        let mut long_groups: Vec<usize> = vec![];
+        for _ in 0..5 {
+            long_groups.append(&mut groups.clone());
+        }
+        let nodes = make_node_types(&long_groups);
+        let mut counts = vec![0; nodes.len()];
+        counts[0] = 1;
+        for i in 0..5 {
+            for c in springs.chars() {
+                next(c, &nodes, &mut counts);
+            }
+            if i != 4 {
+                next('?', &nodes, &mut counts);
+            }
+        }
+        total += counts[nodes.len() - 1] + counts[nodes.len() - 2]
+    }
+    return total as i64;
+}
+pub fn part1_dfa(contents: &str) -> i64 {
+    enum NodeType {
+        StartOfGroup,
+        MidGroup,
+        EndOfGroup,
+        Finished,
+    }
+    impl NodeType {
+        fn operational_move(&self) -> Option<usize> {
+            match self {
+                Self::StartOfGroup | Self::Finished => Some(0),
+                Self::MidGroup => None,
+                Self::EndOfGroup => Some(1),
+            }
+        }
+        fn damaged_move(&self) -> Option<usize> {
+            match self {
+                Self::StartOfGroup | Self::MidGroup => Some(1),
+                Self::EndOfGroup | Self::Finished => None,
+            }
+        }
+    }
+
+    fn make_node_types(groups: &[usize]) -> Vec<NodeType> {
+        let mut result: Vec<NodeType> = vec![];
+        for group in groups {
+            result.push(NodeType::StartOfGroup);
+            for _ in 0..(group - 1) {
+                result.push(NodeType::MidGroup);
+            }
+            result.push(NodeType::EndOfGroup);
+        }
+        result.push(NodeType::Finished);
+        return result;
+    }
+
+    fn next(c: char, nodes: &[NodeType], counts: &mut [usize]) {
+        let operation_move = c != '#';
+        let damage_move = c != '.';
+        for (i, node) in nodes.iter().enumerate().rev() {
+            let n = counts[i];
+            if n <= 0 {
+                continue;
+            }
+            counts[i] = 0;
+            if damage_move {
+                if let Some(m) = node.damaged_move() {
+                    counts[i + m] += n;
+                }
+            }
+            if operation_move {
+                if let Some(m) = node.operational_move() {
+                    counts[i + m] += n;
+                }
+            }
+        }
+    }
+
+    let mut total = 0;
+    for line in contents.lines() {
+        let (springs, groups) = line.split_once(' ').unwrap();
+        let groups = groups
+            .split(',')
+            .map(|v| v.parse::<usize>().unwrap())
+            .collect_vec();
+
+        let nodes = make_node_types(&groups);
+        let mut counts = vec![0; nodes.len()];
+        counts[0] = 1;
+        for c in springs.chars() {
+            next(c, &nodes, &mut counts);
+        }
+        total += counts[nodes.len() - 1] + counts[nodes.len() - 2]
+    }
+    return total as i64;
+}
+
 pub fn main() {
     let input = std::fs::read_to_string("input/day12").unwrap();
 
     let iters = 100;
 
-    let fns: [(&'static str, fn(&str) -> i64); 2] = [("part1", part1), ("part2", part2)];
+    let fns: [(&'static str, fn(&str) -> i64); 4] = [
+        ("part1", part1),
+        ("part1 (dfa)", part1_dfa),
+        ("part2", part2),
+        ("part2 (dfa)", part2_dfa),
+    ];
 
     for (name, f) in fns {
         println!("  {name}: {}", f(&input));
@@ -100,6 +272,7 @@ fn test_part1_example() {
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1"#;
     assert_eq!(part1(input), 21);
+    assert_eq!(part1_dfa(input), 21);
 }
 
 #[test]
@@ -136,16 +309,19 @@ fn test_part2_example() {
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1"#;
     assert_eq!(part2(input), 525152);
+    assert_eq!(part2_dfa(input), 525152);
 }
 
 #[test]
 fn test_part1_facit() {
     let input = std::fs::read_to_string("input/day12").unwrap();
     assert_eq!(part1(&input), 7506);
+    assert_eq!(part1_dfa(&input), 7506);
 }
 
 #[test]
 fn test_part2_facit() {
     let input = std::fs::read_to_string("input/day12").unwrap();
     assert_eq!(part2(&input), 548241300348335);
+    assert_eq!(part2_dfa(&input), 548241300348335);
 }
