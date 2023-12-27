@@ -26,6 +26,17 @@ impl Dir {
             Self::Right => Self::Left,
         }
     }
+    pub fn turn_left(self) -> Self {
+        match self {
+            Self::Up => Self::Left,
+            Self::Down => Self::Right,
+            Self::Left => Self::Down,
+            Self::Right => Self::Up,
+        }
+    }
+    pub fn turn_right(self) -> Self {
+        self.turn_left().opposite()
+    }
 }
 
 pub type Pos = (usize, usize);
