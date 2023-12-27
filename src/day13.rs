@@ -1,3 +1,5 @@
+use crate::utils::Vec2dUtils;
+
 static INPUT_FILE: &str = "input/day13";
 
 pub fn part1(input: &str) -> i64 {
@@ -51,14 +53,7 @@ fn find_mirror_transpose(section: &[Vec<char>]) -> i64 {
         return ix as i64;
     }
 
-    let section: Vec<Vec<char>> = (0..section[0].len())
-        .map(|i| {
-            section
-                .iter()
-                .map(|inner| inner[i].clone())
-                .collect::<Vec<char>>()
-        })
-        .collect();
+    let section = section.transpose();
     let col_count = section[0].len();
 
     'col: for ix in 1..col_count {
