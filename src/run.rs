@@ -20,6 +20,16 @@ fn main() {
         ("day14", aoc23::day14::main),
         ("day15", aoc23::day15::main),
         ("day16", aoc23::day16::main),
+        ("day17", aoc23::day17::main),
+        ("day18", aoc23::day18::main),
+        ("day19", aoc23::day19::main),
+        ("day20", aoc23::day20::main),
+        ("day21", aoc23::day21::main),
+        ("day22", aoc23::day22::main),
+        ("day23", aoc23::day23::main),
+        ("day24", aoc23::day24::main),
+        ("day25", aoc23::day25::main),
+        // [NEXT DAY]
     ];
     for t in target {
         for (name, f) in &fns {
