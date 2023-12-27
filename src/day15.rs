@@ -34,7 +34,7 @@ pub fn part2(input: &str) -> i64 {
             boxes[h].retain(|v| v.0 != id);
         } else {
             let n: u8 = n[0] - b'0';
-            if let Some(ref mut b) = boxes[h].iter_mut().find(|v| v.0 == id) {
+            if let Some(b) = boxes[h].iter_mut().find(|v| v.0 == id) {
                 b.1 = n;
             } else {
                 boxes[h].push((id, n));
