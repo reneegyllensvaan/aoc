@@ -54,7 +54,6 @@ pub fn part1(input: &str) -> i64 {
 
 pub fn part2(input: &str) -> i64 {
     let mut grid: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
-    // grid = grid.transpose();
 
     let mut seen = HashMap::<Vec<Vec<char>>, usize>::new();
 
@@ -136,7 +135,6 @@ fn tilt_north(grid: &[Vec<char>]) -> Vec<Vec<char>> {
 
 pub fn main() {
     let input = std::fs::read_to_string(INPUT_FILE).unwrap();
-    println!("part2 example = {}", part2(&input));
 
     let iters = 10;
 
