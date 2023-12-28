@@ -219,13 +219,6 @@ pub fn part2<'a>(input: &'a str) -> i64 {
             }
         }
     }
-    // for part in parts {
-    //     println!("part: {:?}", part);
-    //     println!("  rule: in",);
-    //     let mut rule = rules.get("in").unwrap();
-    //     println!("    ops: {:?}", rule);
-    //     'part: loop {}
-    // }
 
     evaluate(part, rules.get("in").unwrap(), &rules)
 }
