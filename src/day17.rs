@@ -163,5 +163,5 @@ fn test_part1_facit() {
 #[test]
 fn test_part2_facit() {
     let input = std::fs::read_to_string(INPUT_FILE).unwrap();
-    assert_eq!(part2(&input), 0);
+    assert_eq!(part2(&input), 1055);
 }

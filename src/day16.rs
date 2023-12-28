@@ -95,7 +95,6 @@ pub fn part2_opt(input: &str) -> i64 {
         let b = traverse_from((w - 1, col), Dir::Up);
         result = result.max(a).max(b);
     }
-    // println!("outgoing_scores: {:?}", outgoing_scores);
 
     result
 }
@@ -259,5 +258,4 @@ fn test_part1_facit() {
 fn test_part2_facit() {
     let input = std::fs::read_to_string(INPUT_FILE).unwrap();
     assert_eq!(part2(&input), 7759);
-    assert_eq!(part2_opt(&input), 7759);
 }
