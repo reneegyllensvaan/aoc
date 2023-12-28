@@ -11,10 +11,12 @@ static INPUT_FILE: &str = "input/$day";
 static EXAMPLE_INPUT: &str = r#"FIXME"#;
 
 pub fn part1(input: &str) -> i64 {
+    let _ = input;
     todo!()
 }
 
 pub fn part2(input: &str) -> i64 {
+    let _ = input;
     todo!()
 }
 
