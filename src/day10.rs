@@ -194,10 +194,6 @@ pub fn part2(input: &str) -> i64 {
         }
         space_grid.push(space_row);
     }
-    println!(
-        "space_grid: \n{}",
-        space_grid.iter().map(|r| r.iter().join("")).join("\n")
-    );
 
     let mut q = VecDeque::<(i64, i64)>::new();
     q.push_back((
@@ -230,11 +226,6 @@ pub fn part2(input: &str) -> i64 {
             seen.insert(target);
         }
     }
-
-    println!(
-        "grid after filling: \n{}",
-        space_grid.iter().map(|r| r.iter().join("")).join("\n")
-    );
 
     let mut result = 0;
     for (row, line) in space_grid.into_iter().enumerate() {
