@@ -9,6 +9,15 @@ pub enum Dir {
     Right,
 }
 impl Dir {
+    pub fn from_char(c: char) -> Self {
+        match c {
+            'U' => Dir::Up,
+            'D' => Dir::Down,
+            'L' => Dir::Left,
+            'R' => Dir::Right,
+            d => panic!("unknown direction: {d}"),
+        }
+    }
     pub fn horizontal(self) -> bool {
         match self {
             Self::Left | Self::Right => true,
