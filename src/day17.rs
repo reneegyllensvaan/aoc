@@ -47,17 +47,17 @@ pub fn part1(input: &str) -> i64 {
             continue;
         }
 
-        if let Some(m) = pos.go_in(dir.turn_left(), &grid) {
-            q.push(Reverse((loss + grid.at(m) as i64, m, dir.turn_left(), 1)));
-        }
-        if let Some(m) = pos.go_in(dir.turn_right(), &grid) {
-            q.push(Reverse((loss + grid.at(m) as i64, m, dir.turn_right(), 1)));
-        }
         // first, try moving ahead.
         if cons <= 2 {
             if let Some(m) = pos.go_in(dir, &grid) {
                 q.push(Reverse((loss + grid.at(m) as i64, m, dir, cons + 1)));
             }
+        }
+        if let Some(m) = pos.go_in(dir.turn_left(), &grid) {
+            q.push(Reverse((loss + grid.at(m) as i64, m, dir.turn_left(), 1)));
+        }
+        if let Some(m) = pos.go_in(dir.turn_right(), &grid) {
+            q.push(Reverse((loss + grid.at(m) as i64, m, dir.turn_right(), 1)));
         }
     }
 
@@ -96,6 +96,14 @@ pub fn part2(input: &str) -> i64 {
             continue;
         }
 
+        // first, try moving ahead.
+        if cons < 10 {
+            if let Some(m) = pos.go_in(dir, &grid) {
+                q.push(Reverse((loss + grid.at(m) as i64, m, dir, cons + 1)));
+            }
+        }
+        // only if we've got enough consecutive movements should we be allowed to turn same
+        // direction
         if cons >= 4 {
             if let Some(m) = pos.go_in(dir.turn_left(), &grid) {
                 q.push(Reverse((loss + grid.at(m) as i64, m, dir.turn_left(), 1)));
@@ -104,19 +112,9 @@ pub fn part2(input: &str) -> i64 {
                 q.push(Reverse((loss + grid.at(m) as i64, m, dir.turn_right(), 1)));
             }
         }
-        // first, try moving ahead.
-        if cons < 10 {
-            if let Some(m) = pos.go_in(dir, &grid) {
-                q.push(Reverse((loss + grid.at(m) as i64, m, dir, cons + 1)));
-            }
-        }
     }
 
-    seen.into_iter()
-        .filter(|v| v.0 == final_pos)
-        .map(|v| v.1)
-        .min()
-        .unwrap() as i64
+    panic!("can this happen?")
 }
 
 pub fn main() {
