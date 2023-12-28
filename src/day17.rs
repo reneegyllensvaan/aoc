@@ -1,9 +1,9 @@
 use std::{
     cmp::Reverse,
-    collections::{BinaryHeap, HashMap, HashSet, VecDeque},
+    collections::{BinaryHeap, HashSet},
 };
 
-use crate::utils::{Dir, Grid, Pos, PosUtils, SGrid, Vec2dUtils};
+use crate::utils::{Dir, Grid, Pos, PosUtils, Vec2dUtils};
 
 static INPUT_FILE: &str = "input/day17";
 #[allow(dead_code)]
