@@ -1,6 +1,5 @@
 use std::{
-    cmp::Reverse,
-    collections::{BinaryHeap, HashMap, HashSet, VecDeque},
+    collections::{HashMap, HashSet, VecDeque},
     ops::RangeInclusive,
 };
 
@@ -202,17 +201,17 @@ fn test_part2_example() {
     assert_eq!(part2(EXAMPLE_INPUT), 7);
 }
 
-// #[test]
-// fn test_part1_facit() {
-//     let input = std::fs::read_to_string(INPUT_FILE).unwrap();
-//     assert_eq!(part1(&input), 386);
-// }
+#[test]
+fn test_part1_facit() {
+    let input = std::fs::read_to_string(INPUT_FILE).unwrap();
+    assert_eq!(part1(&input), 386);
+}
 
-// #[test]
-// fn test_part2_facit() {
-//     let input = std::fs::read_to_string(INPUT_FILE).unwrap();
-//     assert_eq!(part2(&input), 0);
-// }
+#[test]
+fn test_part2_facit() {
+    let input = std::fs::read_to_string(INPUT_FILE).unwrap();
+    assert_eq!(part2(&input), 39933);
+}
 
 #[test]
 fn test_supports_iself() {
