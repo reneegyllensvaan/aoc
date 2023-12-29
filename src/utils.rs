@@ -1,3 +1,5 @@
+use std::ops::RangeInclusive;
+
 pub type Grid<T> = Vec<Vec<T>>;
 pub type SGrid<T> = [Vec<T>];
 
@@ -141,4 +143,25 @@ impl<T: Clone> Vec2dUtils<T> for [Vec<T>] {
             })
             .collect()
     }
+}
+
+pub fn range_intersect(
+    a: &RangeInclusive<i64>,
+    b: &RangeInclusive<i64>,
+) -> Option<RangeInclusive<i64>> {
+    let start = *a.start().max(b.start());
+    let end = *a.end().min(b.end());
+    if start <= end {
+        Some(start..=end)
+    } else {
+        None
+    }
+}
+#[test]
+fn test_range_intersect() {
+    assert_eq!(range_intersect(&(1..=2), &(1..=1)), Some(1..=1));
+    assert_eq!(range_intersect(&(10..=50), &(5..=15)), Some(10..=15));
+    assert_eq!(range_intersect(&(5..=50), &(10..=15)), Some(10..=15));
+    assert_eq!(range_intersect(&(12..=20), &(10..=15)), Some(12..=15));
+    assert_eq!(range_intersect(&(4..=5), &(10..=15)), None);
 }

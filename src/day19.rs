@@ -1,3 +1,4 @@
+use crate::utils::range_intersect;
 use std::{collections::HashMap, ops::RangeInclusive};
 
 static INPUT_FILE: &str = "input/day19";
@@ -221,19 +222,6 @@ pub fn part2<'a>(input: &'a str) -> i64 {
     }
 
     evaluate(part, rules.get("in").unwrap(), &rules)
-}
-
-fn range_intersect(
-    a: &RangeInclusive<i64>,
-    b: &RangeInclusive<i64>,
-) -> Option<RangeInclusive<i64>> {
-    let start = *a.start().max(b.start());
-    let end = *a.end().min(b.end());
-    if start < end {
-        Some(start..=end)
-    } else {
-        None
-    }
 }
 
 pub fn main() {

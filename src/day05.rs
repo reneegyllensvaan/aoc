@@ -1,3 +1,4 @@
+use crate::utils::range_intersect;
 use std::{collections::HashMap, ops::RangeInclusive};
 
 use indicatif::{
@@ -279,19 +280,6 @@ fn map_range(
     }
 
     result
-}
-
-fn range_intersect(
-    a: &RangeInclusive<i64>,
-    b: &RangeInclusive<i64>,
-) -> Option<RangeInclusive<i64>> {
-    let start = *a.start().max(b.start());
-    let end = *a.end().min(b.end());
-    if start < end {
-        Some(start..=end)
-    } else {
-        None
-    }
 }
 
 /// Version 2.
@@ -715,14 +703,6 @@ humidity-to-location map:
 fn test_part1_facit() {
     let input = std::fs::read_to_string("input/day05").unwrap();
     assert_eq!(part1(&input), 261668924);
-}
-
-#[test]
-fn test_range_intersect() {
-    assert_eq!(range_intersect(&(10..=50), &(5..=15)), Some(10..=15));
-    assert_eq!(range_intersect(&(5..=50), &(10..=15)), Some(10..=15));
-    assert_eq!(range_intersect(&(12..=20), &(10..=15)), Some(12..=15));
-    assert_eq!(range_intersect(&(4..=5), &(10..=15)), None);
 }
 
 #[test]
