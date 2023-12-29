@@ -52,6 +52,9 @@ pub type Pos = (usize, usize);
 pub trait PosUtils {
     fn go(&self, dir: Dir) -> Option<Pos>;
     fn go_in<T: Clone>(&self, dir: Dir, grid: &SGrid<T>) -> Option<Pos>;
+    fn go_wrapping_in<T: Clone>(&self, dir: Dir, grid: &SGrid<T>) -> Option<Pos>;
+    fn neighbors_in<T: Clone>(&self, grid: &SGrid<T>) -> Vec<Pos>;
+    fn neighbors_wrapping_in<T: Clone>(&self, grid: &SGrid<T>) -> Vec<Pos>;
 }
 impl PosUtils for Pos {
     fn go(&self, dir: Dir) -> Option<Pos> {
@@ -82,6 +85,36 @@ impl PosUtils for Pos {
             Dir::Left => Some((r, c - 1)),
             Dir::Right => Some((r, c + 1)),
         }
+    }
+    fn go_wrapping_in<T: Clone>(&self, dir: Dir, grid: &SGrid<T>) -> Option<Pos> {
+        if grid.len() == 0 {
+            return None;
+        }
+        let (r, c) = *self;
+        let h = grid.len();
+        let w = grid[0].len();
+        match dir {
+            Dir::Up if r == 0 => Some((h - 1, c)),
+            Dir::Left if c == 0 => Some((r, w - 1)),
+            Dir::Down if r >= h - 1 => Some((0, c)),
+            Dir::Right if c >= w - 1 => Some((r, 0)),
+            Dir::Up => Some((r - 1, c)),
+            Dir::Down => Some((r + 1, c)),
+            Dir::Left => Some((r, c - 1)),
+            Dir::Right => Some((r, c + 1)),
+        }
+    }
+    fn neighbors_in<T: Clone>(&self, grid: &SGrid<T>) -> Vec<Pos> {
+        [Dir::Up, Dir::Down, Dir::Left, Dir::Right]
+            .into_iter()
+            .flat_map(|dir| self.go_in(dir, grid))
+            .collect()
+    }
+    fn neighbors_wrapping_in<T: Clone>(&self, grid: &SGrid<T>) -> Vec<Pos> {
+        [Dir::Up, Dir::Down, Dir::Left, Dir::Right]
+            .into_iter()
+            .flat_map(|dir| self.go_wrapping_in(dir, grid))
+            .collect()
     }
 }
 
