@@ -20,7 +20,7 @@ pub fn part2(input: &str) -> i64 {
     todo!()
 }
 
-pub fn main() {
+pub fn main(bench: bool) {
     let input = std::fs::read_to_string(INPUT_FILE).unwrap();
 
     let iters = 10;
@@ -31,19 +31,21 @@ pub fn main() {
         println!("  {name}: {}", f(&input));
     }
     println!("");
-    for (name, f) in &fns {
-        let begin = std::time::Instant::now();
-        for _ in 0..iters {
-            f(&input);
-        }
-        let end = std::time::Instant::now();
-        println!(
-            "  {} {} in: {}us ({}us/iter)",
-            iters,
-            name,
-            (end - begin).as_micros(),
-            (end - begin).as_micros() / iters
-        );
+    if bench {
+      for (name, f) in &fns {
+          let begin = std::time::Instant::now();
+          for _ in 0..iters {
+              f(&input);
+          }
+          let end = std::time::Instant::now();
+          println!(
+              "  {} {} in: {}us ({}us/iter)",
+              iters,
+              name,
+              (end - begin).as_micros(),
+              (end - begin).as_micros() / iters
+          );
+      }
     }
 }
 

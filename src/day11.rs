@@ -60,7 +60,7 @@ pub fn part2(input: &str) -> i64 {
     solve(input, 1000000)
 }
 
-pub fn main() {
+pub fn main(bench: bool) {
     let input = std::fs::read_to_string("input/day11").unwrap();
 
     let iters = 100;
@@ -71,19 +71,21 @@ pub fn main() {
         println!("  {name}: {}", f(&input));
     }
     println!("");
-    for (name, f) in fns {
-        let begin = std::time::Instant::now();
-        for _ in 0..iters {
-            f(&input);
+    if bench {
+        for (name, f) in fns {
+            let begin = std::time::Instant::now();
+            for _ in 0..iters {
+                f(&input);
+            }
+            let end = std::time::Instant::now();
+            println!(
+                "  {} {} in: {}us ({}us/iter)",
+                iters,
+                name,
+                (end - begin).as_micros(),
+                (end - begin).as_micros() / iters
+            );
         }
-        let end = std::time::Instant::now();
-        println!(
-            "  {} {} in: {}us ({}us/iter)",
-            iters,
-            name,
-            (end - begin).as_micros(),
-            (end - begin).as_micros() / iters
-        );
     }
 }
 

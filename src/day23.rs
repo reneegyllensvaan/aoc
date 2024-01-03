@@ -81,10 +81,10 @@ pub fn part1(input: &str) -> i64 {
     for pos in visited {
         grid[pos.0][pos.1] = 'O';
     }
-    println!(
-        "walked: \n{}",
-        grid.into_iter().map(|l| l.into_iter().join("")).join("\n")
-    );
+    // println!(
+    //     "walked: \n{}",
+    //     grid.into_iter().map(|l| l.into_iter().join("")).join("\n")
+    // );
 
     result.unwrap() as i64
 }
@@ -299,10 +299,10 @@ pub fn part2(input: &str) -> i64 {
     result
 }
 
-pub fn main() {
+pub fn main(bench: bool) {
     let input = std::fs::read_to_string(INPUT_FILE).unwrap();
 
-    let iters = 10;
+    let iters = 1;
 
     let fns: Vec<(&'static str, fn(&str) -> i64)> = vec![("part1", part1), ("part2", part2)];
 
@@ -310,22 +310,21 @@ pub fn main() {
         println!("  {name}: {}", f(&input));
     }
     println!("");
-    if true {
-        return;
-    }
-    for (name, f) in &fns {
-        let begin = std::time::Instant::now();
-        for _ in 0..iters {
-            f(&input);
+    if bench {
+        for (name, f) in &fns {
+            let begin = std::time::Instant::now();
+            for _ in 0..iters {
+                f(&input);
+            }
+            let end = std::time::Instant::now();
+            println!(
+                "  {} {} in: {}us ({}us/iter)",
+                iters,
+                name,
+                (end - begin).as_micros(),
+                (end - begin).as_micros() / iters
+            );
         }
-        let end = std::time::Instant::now();
-        println!(
-            "  {} {} in: {}us ({}us/iter)",
-            iters,
-            name,
-            (end - begin).as_micros(),
-            (end - begin).as_micros() / iters
-        );
     }
 }
 
