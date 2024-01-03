@@ -32,6 +32,10 @@
 (declare-const t2 Int)
 (declare-const t3 Int)
 
+; seems to go on forever if we don't constrain these values
+(assert (> t1 0))
+(assert (> t2 0))
+(assert (> t3 0))
 ; first hailstone
 (assert (= (+ x0 (* dx t1)) (+ 237822270988608 (* 115 t1))))
 (assert (= (+ y0 (* dy t1)) (+ 164539183264530 (* 346 t1))))
