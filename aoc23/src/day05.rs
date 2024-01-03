@@ -1,5 +1,5 @@
-use crate::utils::range_intersect;
 use std::{collections::HashMap, ops::RangeInclusive};
+use utils::range_intersect;
 
 use indicatif::{
     MultiProgress, ParallelProgressIterator, ProgressBar, ProgressDrawTarget, ProgressIterator,

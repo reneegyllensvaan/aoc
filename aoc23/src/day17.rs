@@ -3,7 +3,7 @@ use std::{
     collections::{BinaryHeap, HashSet},
 };
 
-use crate::utils::{Dir, Grid, Pos, PosUtils, Vec2dUtils};
+use utils::{Dir, Grid, Pos, PosUtils, Vec2dUtils};
 
 static INPUT_FILE: &str = "input/day17";
 #[allow(dead_code)]

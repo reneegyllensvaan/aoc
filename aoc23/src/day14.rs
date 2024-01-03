@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::utils::Vec2dUtils;
+use utils::Vec2dUtils;
 
 static INPUT_FILE: &str = "input/day14";
 #[allow(dead_code)]

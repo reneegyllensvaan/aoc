@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 
 use itertools::Itertools;
 
-use crate::utils::{Grid, Pos, PosUtils, Vec2dUtils};
+use utils::{Grid, Pos, PosUtils, Vec2dUtils};
 
 static INPUT_FILE: &str = "input/day21";
 #[allow(dead_code)]

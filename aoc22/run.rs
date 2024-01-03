@@ -1,4 +1,4 @@
-pub fn main(args: &[String], bench: bool) {
+pub fn main(target: &[String], bench: bool) {
     let fns: Vec<(&'static str, fn(bool))> = vec![
         ("day01", crate::day01::main),
         ("day02", crate::day02::main),
@@ -27,9 +27,9 @@ pub fn main(args: &[String], bench: bool) {
         ("day25", crate::day25::main),
         // [NEXT DAY]
     ];
-    for t in args {
+    for t in target {
         for (name, f) in &fns {
-            if *t == "all" || t == name {
+            if t == "all" || t == *name {
                 println!("\n{name}:");
                 f(bench);
             }

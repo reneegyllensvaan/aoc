@@ -1,0 +1,24 @@
+[package]
+name = "aoc"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "aoc"
+path = "src/main.rs"
+
+[workspace]
+members = [
+  "aoc22",
+  "aoc23",
+  "utils",
+]
+
+[workspace.dependencies]
+aoc22 = { path = "./aoc22" }
+aoc23 = { path = "./aoc23" }
+utils = { path = "./utils" }
+
+[dependencies]
+aoc22 = { workspace = true }
+aoc23 = { workspace = true }

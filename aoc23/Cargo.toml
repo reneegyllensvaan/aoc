@@ -7,9 +7,13 @@ edition = "2021"
 # lto = "fat"
 # codegen-units = 1
 
+[lib]
+name = "aoc23"
+path = "src/lib.rs"
+
 [[bin]]
 name = "aoc23"
-path = "src/run.rs"
+path = "src/main.rs"
 
 [[bench]]
 name = "bench"
@@ -27,6 +31,7 @@ rayon = "1.8.0"
 regex = "1.10.2"
 rustc-hash = "1.1.0"
 z3 = { version = "0.12.1", features = ["static-link-z3"] }
+utils = { workspace = true }
 
 [dev-dependencies]
 criterion = "0.5.1"

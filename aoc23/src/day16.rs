@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::utils::{Dir, Grid, Pos, PosUtils, SGrid, Vec2dUtils};
+use utils::{Dir, Grid, Pos, PosUtils, SGrid, Vec2dUtils};
 
 static INPUT_FILE: &str = "input/day16";
 #[allow(dead_code)]

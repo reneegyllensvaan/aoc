@@ -1,4 +1,4 @@
-use crate::utils::Vec2dUtils;
+use utils::Vec2dUtils;
 
 static INPUT_FILE: &str = "input/day13";
 

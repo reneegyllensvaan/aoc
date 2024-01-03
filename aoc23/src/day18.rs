@@ -1,4 +1,4 @@
-use crate::utils::Dir;
+use utils::Dir;
 
 static INPUT_FILE: &str = "input/day18";
 #[allow(dead_code)]

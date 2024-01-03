@@ -1,5 +1,5 @@
-use crate::utils::range_intersect;
 use std::{collections::HashMap, ops::RangeInclusive};
+use utils::range_intersect;
 
 static INPUT_FILE: &str = "input/day19";
 #[allow(dead_code)]

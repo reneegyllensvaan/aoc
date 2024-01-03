@@ -3,7 +3,7 @@ use std::{
     ops::RangeInclusive,
 };
 
-use crate::utils::range_intersect;
+use utils::range_intersect;
 
 static INPUT_FILE: &str = "input/day22";
 #[allow(dead_code)]
