@@ -57,6 +57,7 @@ pub trait PosUtils {
     fn go_wrapping_in<T: Clone>(&self, dir: Dir, grid: &SGrid<T>) -> Option<Pos>;
     fn neighbors_in<T: Clone>(&self, grid: &SGrid<T>) -> Vec<Pos>;
     fn neighbors_wrapping_in<T: Clone>(&self, grid: &SGrid<T>) -> Vec<Pos>;
+    fn dir_of(&self, other: &Self) -> Dir;
 }
 impl PosUtils for Pos {
     fn go(&self, dir: Dir) -> Option<Pos> {
@@ -117,6 +118,14 @@ impl PosUtils for Pos {
             .into_iter()
             .flat_map(|dir| self.go_wrapping_in(dir, grid))
             .collect()
+    }
+    fn dir_of(&self, other: &Self) -> Dir {
+        for dir in [Dir::Up, Dir::Down, Dir::Left, Dir::Right] {
+            if self.go(dir).is_some_and(|v| v == *other) {
+                return dir;
+            }
+        }
+        panic!("other is not a neighbor");
     }
 }
 
