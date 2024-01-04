@@ -3,12 +3,14 @@ name = "aoc22"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "aoc22"
+path = "lib.rs"
+
 [[bin]]
 name = "aoc22"
 path = "main.rs"
 
 [dependencies]
-
-[lib]
-name = "aoc22"
-path = "lib.rs"
+itertools = { workspace = true }
+utils = { workspace = true }
