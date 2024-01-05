@@ -616,7 +616,7 @@ pub fn part2_popcnt(input: &str) -> i64 {
             vec![0; (h * w) / MAP_SIZE as usize + 1],
         ];
         while let Some((mut pos, mut dir)) = beams.pop_front() {
-            let mut sl = unsafe { seen.get_unchecked_mut(dir as usize) };
+            let mut sl = &mut seen[dir as usize];
             loop {
                 let ix = pos.0 * h + pos.1;
                 let mask: B = 1 << (ix % MAP_SIZE as usize);
@@ -630,20 +630,20 @@ pub fn part2_popcnt(input: &str) -> i64 {
                     b'|' if dir.horizontal() => {
                         beams.push_back((pos, Dir::Up));
                         dir = Dir::Down;
-                        sl = unsafe { seen.get_unchecked_mut(dir as usize) };
+                        sl = &mut seen[dir as usize];
                     }
                     b'-' if dir.vertical() => {
                         beams.push_back((pos, Dir::Left));
                         dir = Dir::Right;
-                        sl = unsafe { seen.get_unchecked_mut(dir as usize) };
+                        sl = &mut seen[dir as usize];
                     }
                     b'/' => {
-                        dir = unsafe { *TILT_LUT.get_unchecked(dir as usize) };
-                        sl = unsafe { seen.get_unchecked_mut(dir as usize) };
+                        dir = TILT_LUT[dir as usize];
+                        sl = &mut seen[dir as usize];
                     }
                     b'\\' => {
-                        dir = unsafe { *TILT_LUT.get_unchecked((dir as usize + 2) & 0b11) };
-                        sl = unsafe { seen.get_unchecked_mut(dir as usize) };
+                        dir = TILT_LUT[(dir as usize + 2) & 0b11];
+                        sl = &mut seen[dir as usize];
                     }
                     _ => {}
                 }
