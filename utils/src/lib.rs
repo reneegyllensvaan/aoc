@@ -1,14 +1,15 @@
-use std::ops::RangeInclusive;
+use std::{mem::transmute, ops::RangeInclusive};
 
 pub type Grid<T> = Vec<Vec<T>>;
 pub type SGrid<T> = [Vec<T>];
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, PartialOrd, Ord, Eq)]
+#[repr(u8)]
 pub enum Dir {
-    Up,
-    Down,
-    Left,
-    Right,
+    Up = 0b00,
+    Right = 0b01,
+    Down = 0b10,
+    Left = 0b11,
 }
 impl Dir {
     pub fn from_char(c: char) -> Self {
@@ -21,33 +22,48 @@ impl Dir {
         }
     }
     pub fn horizontal(self) -> bool {
-        match self {
-            Self::Left | Self::Right => true,
-            _ => false,
-        }
+        (self as u8) & 0b01 == 1
     }
     pub fn vertical(self) -> bool {
-        !self.horizontal()
+        (self as u8) & 0b01 == 0
     }
     pub fn opposite(self) -> Self {
-        match self {
-            Self::Up => Self::Down,
-            Self::Down => Self::Up,
-            Self::Left => Self::Right,
-            Self::Right => Self::Left,
-        }
-    }
-    pub fn turn_left(self) -> Self {
-        match self {
-            Self::Up => Self::Left,
-            Self::Down => Self::Right,
-            Self::Left => Self::Down,
-            Self::Right => Self::Up,
-        }
+        unsafe { transmute((self as u8 + 2) & 0b11) }
     }
     pub fn turn_right(self) -> Self {
-        self.turn_left().opposite()
+        unsafe { transmute((self as u8 + 1) & 0b11) }
     }
+    pub fn turn_left(self) -> Self {
+        unsafe { transmute((self as u8 + 3) & 0b11) }
+    }
+}
+#[test]
+fn dir_turn_left() {
+    assert_eq!(Dir::Up.turn_left(), Dir::Left);
+    assert_eq!(Dir::Down.turn_left(), Dir::Right);
+    assert_eq!(Dir::Left.turn_left(), Dir::Down);
+    assert_eq!(Dir::Right.turn_left(), Dir::Up);
+}
+#[test]
+fn dir_turn_right() {
+    assert_eq!(Dir::Up.turn_right(), Dir::Right);
+    assert_eq!(Dir::Down.turn_right(), Dir::Left);
+    assert_eq!(Dir::Left.turn_right(), Dir::Up);
+    assert_eq!(Dir::Right.turn_right(), Dir::Down);
+}
+#[test]
+fn dir_turn_horizontal() {
+    assert_eq!(Dir::Up.horizontal(), false);
+    assert_eq!(Dir::Down.horizontal(), false);
+    assert_eq!(Dir::Left.horizontal(), true);
+    assert_eq!(Dir::Right.horizontal(), true);
+}
+#[test]
+fn dir_turn_vertical() {
+    assert_eq!(Dir::Up.vertical(), true);
+    assert_eq!(Dir::Down.vertical(), true);
+    assert_eq!(Dir::Left.vertical(), false);
+    assert_eq!(Dir::Right.vertical(), false);
 }
 
 pub type Pos = (usize, usize);
@@ -173,4 +189,21 @@ fn test_range_intersect() {
     assert_eq!(range_intersect(&(5..=50), &(10..=15)), Some(10..=15));
     assert_eq!(range_intersect(&(12..=20), &(10..=15)), Some(12..=15));
     assert_eq!(range_intersect(&(4..=5), &(10..=15)), None);
+}
+
+pub fn separate_thousands(n: &str) -> String {
+    n.chars()
+        .collect::<Vec<_>>()
+        .rchunks(3)
+        .rev()
+        .map(|v| v.into_iter().collect::<String>())
+        .collect::<Vec<_>>()
+        .join("_")
+}
+#[test]
+fn test_separate_thousands() {
+    assert_eq!(separate_thousands("1000000"), "1_000_000");
+    assert_eq!(separate_thousands("100000"), "100_000");
+    assert_eq!(separate_thousands("1000"), "1_000");
+    assert_eq!(separate_thousands("100"), "100");
 }

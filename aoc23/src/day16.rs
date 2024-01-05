@@ -1,6 +1,7 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 
-use utils::{Dir, Grid, Pos, PosUtils, SGrid, Vec2dUtils};
+use rustc_hash::FxHashSet;
+use utils::{separate_thousands, Dir, Grid, Pos, PosUtils, SGrid, Vec2dUtils};
 
 static INPUT_FILE: &str = "input/day16";
 #[allow(dead_code)]
@@ -59,6 +60,41 @@ pub fn part2(input: &str) -> i64 {
         let a = traverse_from((0, col), Dir::Down);
         let b = traverse_from((w - 1, col), Dir::Up);
         result = result.max(a).max(b);
+    }
+
+    result
+}
+
+pub fn part2_alt(input: &str) -> i64 {
+    let grid: &[u8] = input.as_bytes();
+    let w = grid.iter().position(|c| *c == b'\n').unwrap();
+    let h = (grid.len() / w) - 1;
+
+    let mut exits = FxHashSet::with_hasher(Default::default());
+    let mut traverse_from = |pos: Pos, dir: Dir| {
+        if exits.contains(&(pos, dir.opposite())) {
+            None
+        } else {
+            Some(traverse_unsafe(grid, h, w, pos, dir, &mut exits))
+        }
+    };
+
+    let mut result = 0;
+    for row in 0..h {
+        if let Some(v) = traverse_from((row, 0), Dir::Right) {
+            result = result.max(v);
+        }
+        if let Some(v) = traverse_from((row, w - 1), Dir::Left) {
+            result = result.max(v);
+        }
+    }
+    for col in 0..w {
+        if let Some(v) = traverse_from((0, col), Dir::Down) {
+            result = result.max(v);
+        }
+        if let Some(v) = traverse_from((w - 1, col), Dir::Up) {
+            result = result.max(v);
+        }
     }
 
     result
@@ -143,6 +179,96 @@ fn traverse(grid: &mut SGrid<char>, pos: Pos, dir: Dir, seen: &mut HashSet<(Pos,
         _ => panic!("unknown tile: {tile}"),
     }
 }
+/// Version 3.
+///
+/// So hashing was the expensive bit of the previous solutions. We'd do a hash table lookup for
+/// each pos/dir pair.
+///
+/// This thing uses four vectors instead, one for each direction, and also doesn't recurse. We're
+/// reusing the exit-tracking strategy from v2 - that was quite significant.
+///
+/// We can also squeeze another couple percent out of this approach by skipping bounds checks. This
+/// is unsafe, and has no real practical utility other than go fast.
+fn traverse_unsafe(
+    grid: &[u8],
+    h: usize,
+    w: usize,
+    pos: Pos,
+    dir: Dir,
+    exits: &mut FxHashSet<(Pos, Dir)>,
+) -> i64 {
+    let mut beams = VecDeque::<(Pos, Dir)>::new();
+    beams.push_back((pos, dir));
+
+    let mut seen = [
+        vec![false; h * w],
+        vec![false; h * w],
+        vec![false; h * w],
+        vec![false; h * w],
+    ];
+    while let Some((mut pos, mut dir)) = beams.pop_front() {
+        let mut sl = unsafe { seen.get_unchecked_mut(dir as usize) };
+        loop {
+            let s = unsafe { sl.get_unchecked_mut(pos.0 * h + pos.1) };
+            if *s {
+                break;
+            }
+            *s = true;
+            static TILT_LUT: [Dir; 4] = [Dir::Right, Dir::Up, Dir::Left, Dir::Down];
+            match grid[pos.0 * (h + 1) + pos.1] {
+                b'|' if dir.horizontal() => {
+                    beams.push_back((pos, Dir::Up));
+                    dir = Dir::Down;
+                    sl = unsafe { seen.get_unchecked_mut(dir as usize) };
+                }
+                b'-' if dir.vertical() => {
+                    beams.push_back((pos, Dir::Left));
+                    dir = Dir::Right;
+                    sl = unsafe { seen.get_unchecked_mut(dir as usize) };
+                }
+                b'/' => {
+                    dir = unsafe { *TILT_LUT.get_unchecked(dir as usize) };
+                    sl = unsafe { seen.get_unchecked_mut(dir as usize) };
+                }
+                b'\\' => {
+                    dir = unsafe { *TILT_LUT.get_unchecked((dir as usize + 2) & 0b11) };
+                    sl = unsafe { seen.get_unchecked_mut(dir as usize) };
+                }
+                _ => {}
+            }
+
+            let tar = {
+                let (r, c) = pos;
+                match dir {
+                    Dir::Up if r == 0 => None,
+                    Dir::Left if c == 0 => None,
+                    Dir::Down if r >= h - 1 => None,
+                    Dir::Right if c >= w - 1 => None,
+                    Dir::Up => Some((r - 1, c)),
+                    Dir::Down => Some((r + 1, c)),
+                    Dir::Left => Some((r, c - 1)),
+                    Dir::Right => Some((r, c + 1)),
+                }
+            };
+            if let Some(new_pos) = tar {
+                pos = new_pos;
+            } else {
+                exits.insert((pos, dir));
+                break;
+            }
+        }
+    }
+    let mut result = 0;
+    for ix in 0..(h * w) {
+        for sl in 0..=3 {
+            if unsafe { *seen.get_unchecked(sl).get_unchecked(ix) } {
+                result += 1;
+                break;
+            }
+        }
+    }
+    result
+}
 fn traverse_track_exits(
     grid: &mut SGrid<char>,
     pos: Pos,
@@ -214,6 +340,7 @@ pub fn main(bench: bool) {
     let fns: Vec<(&'static str, fn(&str) -> i64)> = vec![
         ("part1", part1),
         ("part2", part2),
+        ("part2 (alt)", part2_alt),
         ("part2 (opt)", part2_opt),
     ];
 
@@ -221,7 +348,7 @@ pub fn main(bench: bool) {
         println!("  {name}: {}", f(&input));
     }
     println!("");
-    if bench {
+    if !bench {
         for (name, f) in &fns {
             let begin = std::time::Instant::now();
             for _ in 0..iters {
@@ -232,8 +359,8 @@ pub fn main(bench: bool) {
                 "  {} {} in: {}us ({}us/iter)",
                 iters,
                 name,
-                (end - begin).as_micros(),
-                (end - begin).as_micros() / iters
+                separate_thousands(&(end - begin).as_micros().to_string()),
+                separate_thousands(&((end - begin).as_micros() / iters).to_string())
             );
         }
     }
