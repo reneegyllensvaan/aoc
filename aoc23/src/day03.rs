@@ -274,33 +274,37 @@ fn parse_no_regex(input: &str) -> (Vec<PartNumber>, Vec<(char, i32, i32)>) {
     let mut tail = &input[..];
     let mut row = 0;
     let mut col = 0;
-    while tail.len() > 0 {
-        if tail.starts_with('.') {
-            col += 1;
-            tail = &tail[1..];
-        } else if tail.starts_with(|c: char| c.is_digit(10)) {
-            let s = if let Some((s, _)) = tail.split_once(|c: char| !c.is_digit(10)) {
-                s
-            } else {
-                tail
-            };
-            let num: i32 = s.parse().unwrap();
-            parts.push(PartNumber {
-                num,
-                row: row as i32,
-                span: col..(col + s.len() as i32),
-            });
-            col += s.len() as i32;
-            tail = &tail[s.len()..];
-        } else if tail.starts_with('\n') {
-            row += 1;
-            col = 0;
-            tail = &tail[1..];
-        } else {
-            let c = tail.chars().next().unwrap();
-            symbols.push((c, row as i32, col));
-            col += c.len_utf8() as i32;
-            tail = &tail[c.len_utf8()..];
+    while let Some(c) = tail.chars().next() {
+        tail = match c {
+            '.' => {
+                col += 1;
+                &tail[1..]
+            }
+            '0'..='9' => {
+                let s = if let Some((s, _)) = tail.split_once(|c: char| !c.is_digit(10)) {
+                    s
+                } else {
+                    tail
+                };
+                let num: i32 = s.parse().unwrap();
+                parts.push(PartNumber {
+                    num,
+                    row: row as i32,
+                    span: col..(col + s.len() as i32),
+                });
+                col += s.len() as i32;
+                &tail[s.len()..]
+            }
+            '\n' => {
+                row += 1;
+                col = 0;
+                &tail[1..]
+            }
+            v => {
+                symbols.push((v, row as i32, col));
+                col += 1;
+                &tail[1..]
+            }
         }
     }
     (parts, symbols)
@@ -326,7 +330,7 @@ pub fn main(bench: bool) {
         println!("  {name}: {}", f(&input));
     }
     println!("");
-    if bench {
+    if !bench {
         for (name, f) in fns {
             let begin = std::time::Instant::now();
             for _ in 0..iters {
