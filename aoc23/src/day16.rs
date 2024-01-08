@@ -818,7 +818,7 @@ pub fn main(bench: bool) {
         println!("  {name}: {}", f(&input));
     }
     println!("");
-    if !bench {
+    if bench {
         for (name, f) in &fns {
             let begin = std::time::Instant::now();
             for _ in 0..iters {
