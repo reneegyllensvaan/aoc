@@ -3,5 +3,5 @@ fn main() {
     if target.len() == 0 {
         target.push("all".to_string());
     }
-    aoc23::run::main(&target, false);
+    aoc23::run::main(&target, !target.contains(&"all".to_string()));
 }
