@@ -8,41 +8,59 @@ pub fn part1(input: &str) -> i64 {
         let (row, seqs) = line.split_once(' ').unwrap();
         let seqs: Vec<i64> = seqs.split(',').map(|v| v.parse().unwrap()).collect();
 
-        result += solve(&row, &seqs, &mut HashMap::new());
+        result += solve(
+            &row.as_bytes(),
+            &seqs,
+            0,
+            0,
+            &mut vec![vec![-1; seqs.len()]; row.len()],
+        );
     }
     result
 }
 
-fn solve(tail: &str, seqs: &[i64], cache: &mut HashMap<(*const u8, *const i64), i64>) -> i64 {
-    if tail.is_empty() {
-        return if seqs.is_empty() { 1 } else { 0 };
+fn solve(
+    tail: &[u8],
+    seqs: &[i64],
+    tail_ix: usize,
+    seqs_ix: usize,
+    cache: &mut Vec<Vec<i64>>,
+) -> i64 {
+    let tail_slice = &tail[tail_ix..];
+    let seqs_slice = &seqs[seqs_ix..];
+    if tail_slice.is_empty() {
+        return if seqs_slice.is_empty() { 1 } else { 0 };
     }
-    if seqs.is_empty() {
-        return if tail.chars().any(|c| c == '#') { 0 } else { 1 };
+    if seqs_slice.is_empty() {
+        return if tail_slice.iter().any(|&c| c == b'#') {
+            0
+        } else {
+            1
+        };
     }
 
-    // lmao what am i doing
-    if let Some(result) = cache.get(&(tail.as_ptr(), seqs.as_ptr())) {
-        return *result;
+    let cv = cache[tail_ix][seqs_ix];
+    if cv != -1 {
+        return cv;
     }
 
     let mut result = 0;
-    if tail.starts_with(&['#', '?']) {
-        let b_len = *seqs.first().unwrap() as usize;
-        if b_len <= tail.len()
-            && !tail.chars().take(b_len).any(|c| c == '.')
-            && (b_len == tail.len() || !tail[b_len..].starts_with('#'))
+    if tail_slice[0] == b'#' || tail_slice[0] == b'?' {
+        let b_len = *seqs_slice.first().unwrap() as usize;
+        if b_len <= tail_slice.len()
+            && !tail_slice.iter().take(b_len).any(|&c| c == b'.')
+            && (b_len == tail_slice.len() || !tail_slice[b_len..].starts_with(b"#"))
         {
-            let rem = &tail[(b_len + 1).min(tail.len())..];
-            let s = &seqs[1..];
-            result += solve(rem, s, cache);
+            let rem_ix = tail_ix + (b_len + 1).min(tail_slice.len());
+            let s_ix = seqs_ix + 1;
+            result += solve(tail, seqs, rem_ix, s_ix, cache);
         }
     }
-    if tail.starts_with(&['.', '?']) {
-        result += solve(&tail[1..], seqs, cache);
+    if tail_slice[0] == b'.' || tail_slice[0] == b'?' {
+        result += solve(tail, seqs, tail_ix + 1, seqs_ix, cache);
     }
 
-    cache.insert((tail.as_ptr(), seqs.as_ptr()), result);
+    cache[tail_ix][seqs_ix] = result;
 
     result
 }
@@ -59,7 +77,13 @@ pub fn part2(input: &str) -> i64 {
             .copied()
             .collect();
 
-        result += solve(&row, &seqs, &mut HashMap::new());
+        result += solve(
+            &row.as_bytes(),
+            &seqs,
+            0,
+            0,
+            &mut vec![vec![-1; seqs.len()]; row.len()],
+        );
     }
     result
 }
@@ -231,24 +255,91 @@ pub fn part1_dfa(contents: &str) -> i64 {
     return total as i64;
 }
 
+fn solve_dp(tail: &[u8], seqs: &[i64]) -> i64 {
+    let mut cache = vec![vec![0; seqs.len() + 1]; tail.len() + 1];
+    for tail_ix in (0..=tail.len()).rev() {
+        for seqs_ix in (0..=seqs.len()).rev() {
+            let tail_slice = &tail[tail_ix..];
+            let seqs_slice = &seqs[seqs_ix..];
+            let mut result = 0;
+            if tail_slice.is_empty() {
+                result += if seqs_slice.is_empty() { 1 } else { 0 };
+            } else if seqs_slice.is_empty() {
+                result += if tail_slice.iter().any(|&c| c == b'#') {
+                    0
+                } else {
+                    1
+                };
+            } else {
+                if tail_slice[0] == b'#' || tail_slice[0] == b'?' {
+                    let b_len = *seqs_slice.first().unwrap() as usize;
+                    if b_len <= tail_slice.len()
+                        && !tail_slice.iter().take(b_len).any(|&c| c == b'.')
+                        && (b_len == tail_slice.len() || !tail_slice[b_len..].starts_with(b"#"))
+                    {
+                        let rem_ix = tail_ix + (b_len + 1).min(tail_slice.len());
+                        let s_ix = seqs_ix + 1;
+                        result += cache[rem_ix][s_ix];
+                    }
+                }
+                if tail_slice[0] == b'.' || tail_slice[0] == b'?' {
+                    result += cache[tail_ix + 1][seqs_ix];
+                }
+            }
+
+            cache[tail_ix][seqs_ix] = result;
+        }
+    }
+    cache[0][0]
+}
+
+pub fn part1_dp(input: &str) -> i64 {
+    let mut result = 0;
+    for line in input.lines() {
+        let (row, seqs) = line.split_once(' ').unwrap();
+        let seqs: Vec<i64> = seqs.split(',').map(|v| v.parse().unwrap()).collect();
+
+        result += solve_dp(&row.as_bytes(), &seqs);
+    }
+    result
+}
+pub fn part2_dp(input: &str) -> i64 {
+    let mut result = 0;
+    for line in input.lines() {
+        let (row, seqs) = line.split_once(' ').unwrap();
+        let seqs: Vec<i64> = seqs.split(',').map(|v| v.parse().unwrap()).collect();
+        let row = [row, row, row, row, row].into_iter().join("?");
+        let seqs: Vec<i64> = [&seqs, &seqs, &seqs, &seqs, &seqs]
+            .into_iter()
+            .flatten()
+            .copied()
+            .collect();
+
+        result += solve_dp(&row.as_bytes(), &seqs);
+    }
+    result
+}
+
 pub fn main(bench: bool) {
     let input = std::fs::read_to_string("input/day12").unwrap();
 
     let iters = 100;
 
-    let fns: [(&'static str, fn(&str) -> i64); 4] = [
+    let fns: Vec<(&'static str, fn(&str) -> i64)> = vec![
         ("part1", part1),
         ("part1 (dfa)", part1_dfa),
+        ("part1 (dp)", part1_dp),
         ("part2", part2),
         ("part2 (dfa)", part2_dfa),
+        ("part2 (dp)", part2_dp),
     ];
 
-    for (name, f) in fns {
+    for (name, f) in &fns {
         println!("  {name}: {}", f(&input));
     }
     println!("");
     if bench {
-        for (name, f) in fns {
+        for (name, f) in &fns {
             let begin = std::time::Instant::now();
             for _ in 0..iters {
                 f(&input);
@@ -275,31 +366,38 @@ fn test_part1_example() {
 ?###???????? 3,2,1"#;
     assert_eq!(part1(input), 21);
     assert_eq!(part1_dfa(input), 21);
+    // assert_eq!(part1_dp(input), 21);
 }
 
 #[test]
 fn test_part1_example_line_1() {
     assert_eq!(part1("???.### 1,1,3"), 1);
+    assert_eq!(part1_dp("???.### 1,1,3"), 1);
 }
 #[test]
 fn test_part1_example_line_2() {
     assert_eq!(part1(".??..??...?##. 1,1,3"), 4);
+    assert_eq!(part1_dp(".??..??...?##. 1,1,3"), 4);
 }
 #[test]
 fn test_part1_example_line_3() {
     assert_eq!(part1("?#?#?#?#?#?#?#? 1,3,1,6"), 1);
+    assert_eq!(part1_dp("?#?#?#?#?#?#?#? 1,3,1,6"), 1);
 }
 #[test]
 fn test_part1_example_line_4() {
     assert_eq!(part1("????.#...#... 4,1,1"), 1);
+    assert_eq!(part1_dp("????.#...#... 4,1,1"), 1);
 }
 #[test]
 fn test_part1_example_line_5() {
     assert_eq!(part1("????.######..#####. 1,6,5"), 4);
+    assert_eq!(part1_dp("????.######..#####. 1,6,5"), 4);
 }
 #[test]
 fn test_part1_example_line_6() {
     assert_eq!(part1("?###???????? 3,2,1"), 10);
+    assert_eq!(part1_dp("?###???????? 3,2,1"), 10);
 }
 
 #[test]
@@ -312,6 +410,7 @@ fn test_part2_example() {
 ?###???????? 3,2,1"#;
     assert_eq!(part2(input), 525152);
     assert_eq!(part2_dfa(input), 525152);
+    assert_eq!(part2_dp(input), 525152);
 }
 
 #[test]

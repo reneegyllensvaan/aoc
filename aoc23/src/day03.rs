@@ -5,6 +5,26 @@ use std::{
 
 use itertools::Itertools;
 
+type Parser = fn(&str) -> (Vec<PartNumber>, Vec<(char, i32, i32)>);
+static mut PARSER: Parser = parse_no_regex;
+fn parse(input: &str) -> (Vec<PartNumber>, Vec<(char, i32, i32)>) {
+    unsafe { PARSER(input) }
+}
+pub fn main(bench: bool) {
+    let fns: Vec<(&'static str, Parser)> = vec![
+        //("regex", parse_regex),
+        //("no regex", parse_no_regex),
+        ("no regex, linewise", parse_linewise_no_regex),
+    ];
+    for (kind, p) in fns {
+        unsafe {
+            PARSER = p;
+        }
+        println!("using parser: {kind}");
+        run_main(bench)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct PartNumber {
     num: i32,
@@ -89,6 +109,43 @@ pub fn part1_hash(input: &str) -> i32 {
         ]
         .into_iter()
         .flatten();
+
+        for symbols in target_rows {
+            for symbol in symbols {
+                let within_span = *symbol >= part.span.start - 1 && *symbol <= part.span.end;
+                if within_span {
+                    result += part.num;
+                    break;
+                }
+            }
+        }
+    }
+    result
+}
+
+/// Version 4.
+///
+/// Just use a vector to do the symbol lookups. Faster, simpler, no hashing! :)
+///
+/// Maybe I should just make the parser build this upfront.
+///
+/// Takes like 79us for me
+pub fn part1_array(input: &str) -> i32 {
+    let mut result: i32 = 0;
+
+    let (parts, syms) = parse(input);
+    let mut symbols: Vec<Vec<i32>> = vec![Vec::new(); 150];
+    for sym in syms {
+        symbols[sym.1 as usize].push(sym.2);
+    }
+
+    for part in parts.iter() {
+        let target_rows = [
+            &symbols[(part.row - if part.row == 0 { 0 } else { 1 }) as usize],
+            &symbols[part.row as usize],
+            &symbols[(part.row + 1) as usize],
+        ]
+        .into_iter();
 
         for symbols in target_rows {
             for symbol in symbols {
@@ -194,54 +251,7 @@ pub fn part2_hash(input: &str) -> i32 {
     result
 }
 
-/// Baseline benchmark of parsing with a regex
-pub fn part2_regex(input: &str) -> i32 {
-    let mut result: i32 = 0;
-
-    let (parts, symbols) = parse_regex(input);
-
-    for symbol in symbols.iter().filter(|(c, _, _)| *c == '*') {
-        let mut adj: Vec<PartNumber> = Vec::new();
-        for part in parts.iter() {
-            let within_row = part.row >= symbol.1 - 1 && part.row <= symbol.1 + 1;
-            let within_span = symbol.2 >= part.span.start - 1 && symbol.2 <= part.span.end;
-            if within_row && within_span {
-                adj.push(part.clone());
-            }
-        }
-        if let [a, b] = &adj[..] {
-            result += a.num * b.num;
-        }
-    }
-    result
-}
-
-/// Baseline benchmark of parsing with the non-regex parser
-pub fn part2_no_regex(input: &str) -> i32 {
-    let mut result: i32 = 0;
-
-    let (parts, symbols) = parse_no_regex(input);
-
-    for symbol in symbols.iter().filter(|(c, _, _)| *c == '*') {
-        let mut adj: Vec<PartNumber> = Vec::new();
-        for part in parts.iter() {
-            let within_row = part.row >= symbol.1 - 1 && part.row <= symbol.1 + 1;
-            let within_span = symbol.2 >= part.span.start - 1 && symbol.2 <= part.span.end;
-            if within_row && within_span {
-                adj.push(part.clone());
-            }
-        }
-        if let [a, b] = &adj[..] {
-            result += a.num * b.num;
-        }
-    }
-    result
-}
-
-fn parse(input: &str) -> (Vec<PartNumber>, Vec<(char, i32, i32)>) {
-    parse_no_regex(input)
-}
-
+#[allow(dead_code)]
 fn parse_regex(input: &str) -> (Vec<PartNumber>, Vec<(char, i32, i32)>) {
     let mut parts: Vec<PartNumber> = Vec::new();
     let mut symbols: Vec<(char, i32, i32)> = Vec::new();
@@ -267,6 +277,7 @@ fn parse_regex(input: &str) -> (Vec<PartNumber>, Vec<(char, i32, i32)>) {
     (parts, symbols)
 }
 
+#[allow(dead_code)]
 fn parse_no_regex(input: &str) -> (Vec<PartNumber>, Vec<(char, i32, i32)>) {
     let mut parts: Vec<PartNumber> = Vec::new();
     let mut symbols: Vec<(char, i32, i32)> = Vec::new();
@@ -310,23 +321,61 @@ fn parse_no_regex(input: &str) -> (Vec<PartNumber>, Vec<(char, i32, i32)>) {
     (parts, symbols)
 }
 
-pub fn main(bench: bool) {
+fn parse_linewise_no_regex(input: &str) -> (Vec<PartNumber>, Vec<(char, i32, i32)>) {
+    let mut parts: Vec<PartNumber> = Vec::new();
+    let mut symbols: Vec<(char, i32, i32)> = Vec::new();
+
+    for (row, line) in input.lines().enumerate() {
+        let mut tail = line;
+        let mut col = 0;
+        while let Some(c) = tail.chars().next() {
+            tail = match c {
+                '.' => {
+                    col += 1;
+                    &tail[1..]
+                }
+                '0'..='9' => {
+                    let s = if let Some((s, _)) = tail.split_once(|c: char| !c.is_digit(10)) {
+                        s
+                    } else {
+                        tail
+                    };
+                    let num: i32 = s.parse().unwrap();
+                    parts.push(PartNumber {
+                        num,
+                        row: row as i32,
+                        span: col..(col + s.len() as i32),
+                    });
+                    col += s.len() as i32;
+                    &tail[s.len()..]
+                }
+                v => {
+                    symbols.push((v, row as i32, col));
+                    col += 1;
+                    &tail[1..]
+                }
+            }
+        }
+    }
+    (parts, symbols)
+}
+
+pub fn run_main(bench: bool) {
     let input = std::fs::read_to_string("input/day03").unwrap();
 
     let iters = 1000;
 
-    let fns: [(&'static str, fn(&str) -> i32); 8] = [
+    let fns: Vec<(&'static str, fn(&str) -> i32)> = vec![
         ("part1", part1),
         ("part2", part2),
         ("part1 (btree)", part1_btree),
         ("part1 (hash)", part1_hash),
-        ("part2 (regex)", part2_regex),
-        ("part2 (no regex)", part2_no_regex),
+        ("part1 (array)", part1_array),
         ("part2 (btree)", part2_btree),
         ("part2 (hash)", part2_hash),
     ];
 
-    for (name, f) in fns {
+    for (name, f) in fns.iter() {
         println!("  {name}: {}", f(&input));
     }
     println!("");

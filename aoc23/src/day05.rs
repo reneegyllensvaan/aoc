@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ops::RangeInclusive};
+use std::{cmp::Reverse, collections::HashMap, ops::RangeInclusive};
 use utils::range_intersect;
 
 use indicatif::{
@@ -478,50 +478,9 @@ pub fn part2_brute_faster(input: &str) -> i64 {
 /// It takes like twice as long as without progress bars because the loop is so trivial, but it
 /// looks cool so i keep it in here.
 pub fn part2_brute_faster_with_progress(input: &str) -> i64 {
-    let mut lines = input.lines();
-    let seeds = lines
-        .next()
-        .unwrap()
-        .split_once(':')
-        .unwrap()
-        .1
-        .split_whitespace()
-        .flat_map(|v| v.parse::<i64>())
-        .chunks(2)
-        .into_iter()
-        .filter_map(|mut v| {
-            let start = v.next()?;
-            let num = v.next()?;
-            Some(start..=(start + num - 1))
-        })
-        .collect::<Vec<RangeInclusive<i64>>>();
+    let (seeds, mut maps) = parse_part2(input);
 
-    let mut maps = HashMap::<(&str, &str), Vec<(i64, i64, i64)>>::new();
-    let mut current_map: Option<((&str, &str), Vec<(i64, i64, i64)>)> = None;
-    for line in lines {
-        if line.len() == 0 {
-            if let Some((path, vec)) = current_map.take() {
-                maps.insert(path, vec);
-            }
-            continue;
-        }
-
-        if current_map.is_none() {
-            let mapping = line.split_once(' ').unwrap().0.split('-').collect_vec();
-            current_map = Some(((mapping[0], mapping[2]), Vec::new()));
-        } else if let Some((_, ref mut v)) = &mut current_map {
-            let mut mapping = line.split(' ').map(|v| v.parse::<i64>().unwrap());
-            let to = mapping.next().unwrap();
-            let from = mapping.next().unwrap();
-            let len = mapping.next().unwrap();
-            v.push((to, from, len));
-        }
-    }
-    if let Some((path, vec)) = current_map.take() {
-        maps.insert(path, vec);
-    }
-
-    for (_, map) in maps.iter_mut() {
+    for map in maps.iter_mut() {
         map.sort_unstable_by_key(|v| -v.2);
     }
 
@@ -538,13 +497,6 @@ pub fn part2_brute_faster_with_progress(input: &str) -> i64 {
     progress.add(main_bar.clone());
     main_bar.tick();
 
-    let seed_to_soil = maps.get(&("seed", "soil")).unwrap();
-    let soil_to_fertilizer = maps.get(&("soil", "fertilizer")).unwrap();
-    let fertilizer_to_water = maps.get(&("fertilizer", "water")).unwrap();
-    let water_to_light = maps.get(&("water", "light")).unwrap();
-    let light_to_temperature = maps.get(&("light", "temperature")).unwrap();
-    let temperature_to_humidity = maps.get(&("temperature", "humidity")).unwrap();
-    let humidity_to_location = maps.get(&("humidity", "location")).unwrap();
     fn map_through(seed: i64, (to, from, len): &(i64, i64, i64)) -> Option<i64> {
         if seed >= *from && seed <= (from + len - 1) {
             Some(to + seed - from)
@@ -570,16 +522,11 @@ pub fn part2_brute_faster_with_progress(input: &str) -> i64 {
             let bar = ProgressBar::new((b - a) as u64).with_style(bar_style);
             progress.add(bar.clone());
 
-            for seed in seed_range.progress_with(bar) {
-                let soil = map_through_all(seed, &seed_to_soil);
-                let fertilizer = map_through_all(soil, &soil_to_fertilizer);
-                let water = map_through_all(fertilizer, &fertilizer_to_water);
-                let light = map_through_all(water, &water_to_light);
-                let temperature = map_through_all(light, &light_to_temperature);
-                let humidity = map_through_all(temperature, &temperature_to_humidity);
-                let location = map_through_all(humidity, &humidity_to_location);
-
-                result = result.min(location);
+            for mut seed in seed_range.progress_with(bar) {
+                for map in maps.iter() {
+                    seed = map_through_all(seed, &map);
+                }
+                result = result.min(seed);
             }
             result
         })
@@ -588,14 +535,154 @@ pub fn part2_brute_faster_with_progress(input: &str) -> i64 {
         .unwrap()
 }
 
+/// Version 5.
+///
+/// So by changing the loop order, I can make the brute force faster yet, by increasing
+/// utilization. One task per range meant the shortest range would finish quickly and then we'd be
+/// bounded by the longest range.
+///
+/// Now, we instead fork out NUM_CPUS tasks per seed range. Turns out that's way faster.
+///
+/// This one runs in about 7s on my machine.
+pub fn part2_brute_faster_2(input: &str) -> i64 {
+    let (seeds, mut maps) = parse_part2(input);
+
+    for map in maps.iter_mut() {
+        map.sort_unstable_by_key(|v| Reverse(v.1 - v.0));
+    }
+
+    let map_through = |mut id: i64| -> i64 {
+        for map in maps.iter() {
+            if let Some(offset) = map
+                .iter()
+                .filter_map(|&(a, b, o)| if id >= a && id <= b { Some(o) } else { None })
+                .next()
+            {
+                id += offset;
+            }
+        }
+        id
+    };
+
+    seeds
+        .into_iter()
+        .map(|s| s.into_par_iter().map(map_through).min().unwrap())
+        .min()
+        .unwrap()
+}
+
+/// Version 6.
+///
+/// We can brute force even faster. This one relies on having a clone of the maps for each thread,
+/// so that each thread can mutate it.
+///
+/// The insight here is that the same map entry will likely occur consecutively. Thus, the
+/// optimization I've done is that each time a map entry is matched, that map entry is bubbled
+/// backwards towards the start of the map vector. That way, consecutively accessed map entries are
+/// faster, which speeds up the common case quite a bit.
+///
+/// This one runs in about 5s on my machine.
+pub fn part2_brute_faster_3(input: &str) -> i64 {
+    let (seeds, mut maps) = parse_part2(input);
+
+    for map in maps.iter_mut() {
+        map.sort_unstable_by_key(|v| Reverse(v.1 - v.0));
+    }
+
+    let mut result = i64::MAX;
+    for seed_range in seeds {
+        let pr = std::thread::scope(|scope| {
+            let num_cores = std::thread::available_parallelism().unwrap().get() as i64;
+            let mut threads = vec![];
+            let start = *seed_range.start();
+            let end = *seed_range.end();
+            let chunk_size = ((end - start) / num_cores) + 2;
+
+            for cix in 0..num_cores {
+                let a = start + chunk_size * cix;
+                let b = end.min(start + chunk_size * (cix + 1));
+                // let mut founds = vec![0usize; 64];
+                let mut maps = maps.clone();
+                threads.push(scope.spawn(move || {
+                    let mut result = i64::MAX;
+                    for mut id in a..=b {
+                        for map in maps.iter_mut() {
+                            let mut found: Option<usize> = None;
+                            for (ix, &(a, b, o)) in map.iter().enumerate() {
+                                if id >= a && id <= b {
+                                    id += o;
+                                    // founds[ix] += 1;
+                                    if ix > 0 {
+                                        found = Some(ix);
+                                    }
+                                    break;
+                                }
+                            }
+                            if let Some(ix) = found {
+                                map.swap(ix, ix - 1);
+                            }
+                        }
+                        result = result.min(id);
+                    }
+                    // println!("founds ({cix}): {:?}", &founds[0..16]);
+                    result
+                }));
+            }
+            threads.into_iter().map(|t| t.join().unwrap()).min()
+        });
+        result = result.min(pr.unwrap());
+    }
+    result
+}
+
+fn parse_part2(input: &str) -> (Vec<RangeInclusive<i64>>, Vec<Vec<(i64, i64, i64)>>) {
+    let mut lines = input.lines();
+    let seeds = lines
+        .next()
+        .unwrap()
+        .split_once(':')
+        .unwrap()
+        .1
+        .split_whitespace()
+        .flat_map(|v| v.parse::<i64>())
+        .chunks(2)
+        .into_iter()
+        .filter_map(|mut v| {
+            let start = v.next()?;
+            let num = v.next()?;
+            Some(start..=(start + num - 1))
+        })
+        .collect::<Vec<RangeInclusive<i64>>>();
+
+    let maps = lines
+        .filter(|l| !l.is_empty())
+        .group_by(|l| l.starts_with(char::is_alphabetic))
+        .into_iter()
+        .filter(|v| !v.0)
+        .map(|ls| {
+            ls.1.map(|line| {
+                let mut m = line.split(' ').map(|v| v.parse::<i64>().unwrap());
+                let (to, from, len) = (m.next().unwrap(), m.next().unwrap(), m.next().unwrap());
+                (from, from + len - 1, to - from)
+            })
+            .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>();
+
+    (seeds, maps)
+}
+
 pub fn main(bench: bool) {
     let input = std::fs::read_to_string("input/day05").unwrap();
 
-    // This one takes a couple minutes to run
-    // println!(
-    //     "part2_brute_faster(input): {:?}",
-    //     part2_brute_faster(&input)
-    // );
+    // // This one takes a couple minutes to run
+    let begin = std::time::Instant::now();
+    print!(
+        "part2_brute_faster_3(input): {:?}",
+        part2_brute_faster_3(&input)
+    );
+    let end = std::time::Instant::now();
+    println!(" in {}ms", (end - begin).as_millis());
 
     let iters = 1000;
 

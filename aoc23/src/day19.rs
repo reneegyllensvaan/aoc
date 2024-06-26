@@ -77,7 +77,7 @@ pub fn part1(input: &str) -> i64 {
     }
 
     let mut result = 0;
-    for part in parts {
+    for (ix, part) in parts.into_iter().enumerate() {
         let mut rule = rules.get("in").unwrap();
         'part: loop {
             for mut instr in rule {
@@ -233,6 +233,9 @@ pub fn main(bench: bool) {
 
     for (name, f) in &fns {
         println!("  {name}: {}", f(&input));
+    }
+    if true {
+        return;
     }
     println!("");
     if bench {
